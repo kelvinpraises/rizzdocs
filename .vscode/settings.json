@@ -1,0 +1,21 @@
+// {
+//   "[solidity]": {
+//     "editor.defaultFormatter": "NomicFoundation.hardhat-solidity"
+//   },
+//   "solidity.formatter": "forge",
+//   "solidity.telemetry": true,
+//   // "solidity.formatter": "prettier",
+//   "editor.formatOnSave": true,
+//   // "solidity.packageDefaultDependenciesContractsDirectory": "src",
+//   // "solidity.packageDefaultDependenciesDirectory": "lib",
+//   "git.ignoreLimitWarning": true,
+//   "cSpell.words": [
+//     "calibrationnet",
+//     "filecoinmainnet",
+//     "localnet",
+//     "nomicfoundation",
+//     "nomiclabs",
+//     "solhint",
+//     "typechain"
+//   ]
+// }
