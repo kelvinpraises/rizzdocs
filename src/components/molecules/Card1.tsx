@@ -10,6 +10,8 @@ interface ICardProps {
   buttonText: string;
   buttonOnclick: () => {};
   buttonImg?: string;
+  typeIsLink?: boolean;
+  href?: string;
 }
 
 const Card1 = (card: ICardProps) => {
@@ -23,6 +25,8 @@ const Card1 = (card: ICardProps) => {
         <p>{card.text}</p>
       </div>
       <Button
+        link={card.typeIsLink}
+        href={card.href}
         text={card.buttonText}
         handleClick={card.buttonOnclick}
         buttonImg={card.buttonImg}

@@ -6,7 +6,7 @@ const page = () => {
   return (
     <>
       <MainScreen
-        title="FVM: Tutorials"
+        title="FVM: How to Guides"
         subtitle="Supporting impactful retroactive project fundings for stakeholders and builders"
         cardArray={[
           {

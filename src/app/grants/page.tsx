@@ -8,10 +8,14 @@ const page = () => {
       <GrantCarousel />
       <MainScreen
         title="RizzDocs Grants"
+        link="View all docfunds"
+        linkhref="/grants/docfunds"
         subtitle="Funding Excellence: Retroactive Grants for Learning Innovators"
         tag="DocFund"
         cardArray={[
           {
+            href: "/grants/new-docfund",
+            typeIsLink: true,
             image: "rocket.svg",
             title: "Fund Ecosystem Projects",
             text: "Create pooled funds to support LX Devs in your community.",
@@ -19,6 +23,8 @@ const page = () => {
             buttonClick: "",
           },
           {
+            href: "/grants/showcase-project",
+            typeIsLink: true,
             image: "timer.svg",
             title: "Receive Ecosystem Funding",
             text: "Showcase a project to qualify for an ecosystem funding round.",

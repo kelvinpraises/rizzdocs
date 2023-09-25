@@ -9,8 +9,19 @@ interface carousel {
   connected?: boolean;
 }
 
-
 const GrantCarousel = () => {
+  const link = {
+    project: [
+      { institution: "crystalrohr", id: 1 },
+      { institution: "uveryderiv", id: 2 },
+      { institution: "crystals", id: 3 },
+    ],
+    docfund: [
+      { institution: "raspberry", id: 1 },
+      { institution: "orange", id: 2 },
+      { institution: "mango", id: 3 },
+    ],
+  };
 
   const [activeButton, setActiveButton] = useState("projects");
   return (
@@ -36,10 +47,27 @@ const GrantCarousel = () => {
         </button>
       </div>
       <div className="flex flex-col gap-8 p-8 overflow-y-scroll">
-        <GrantCard institution={"crystalrohr"} />
-        <GrantCard institution={"crystalrohr"} />
-        <GrantCard institution={"crystalrohr"} />
-        <GrantCard institution={"crystalrohr"} />
+        {activeButton == "projects" ? (
+          <>
+            {link.project.map((item, index) => (
+              <GrantCard
+                key={index}
+                institution={item.institution}
+                href={`/grants/projects/${item.id}`}
+              />
+            ))}
+          </>
+        ) : (
+          <>
+            {link.docfund.map((item, index) => (
+              <GrantCard
+                key={index}
+                institution={item.institution}
+                href={`/grants/docfunds/${item.id}`}
+              />
+            ))}
+          </>
+        )}
       </div>
     </div>
   );

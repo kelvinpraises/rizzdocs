@@ -1,42 +1,46 @@
+import TextHead from "@/components/atoms/TextHead";
+import GrantCarousel from "@/components/organisms/GrantCarousel";
 import MainScreen from "@/components/organisms/MainScreen";
-import SpaceCarousel from "@/components/organisms/SpaceCarousel";
 import React from "react";
 
 const page = () => {
   return (
     <>
+      <GrantCarousel />
       <MainScreen
-        title="FVM"
-        tag="Documentation"
+        title="Ecosystem DocFunds"
         subtitle="Supporting impactful retroactive project fundings for stakeholders and builders"
         cardArray={[
           {
-            image: "rocket.svg",
-            title: "Fund Ecosystem Projects",
-            text: "Create pooled funds to support LX Devs in your community.",
-            buttonText: "Create New DocFund",
+            typeIsLink: true,
+            href:"/grants/docfunds/1",
+            title: "React Everywhere Challenge",
+            text: "Create pooled funds to support builders in your community.",
+            buttonText: "Open Fund",
             buttonClick: "",
             buttonImg: "enter.svg",
           },
           {
-            image: "rocket.svg",
-            title: "Receive Ecosystem Funding",
+            typeIsLink: true,
+            href:"/grants/docfunds/1",
+            title: "DreamUp: Purple Rain Challenge",
             text: "Showcase a project to qualify for an ecosystem funding round.",
-            buttonText: "Showcase Project",
+            buttonText: "Open Fund",
             buttonClick: "",
             buttonImg: "enter.svg",
           },
           {
-            image: "timer.svg",
-            title: "Receive Ecosystem Funding",
+            typeIsLink: true,
+            href:"/grants/docfunds/1",
+            title: "Retro Funds",
             text: "Showcase a project to qualify for an ecosystem funding round.",
-            buttonText: "Showcase Project",
+            buttonText: "Open Fund",
             buttonClick: "",
             buttonImg: "enter.svg",
           },
         ]}
       />
-      <SpaceCarousel />
+      {/* <TextHead title='' /> */}
     </>
   );
 };
