@@ -1,7 +1,14 @@
-import { createServer } from "http";
-import { parse } from "url";
+import chokidar from "chokidar";
+import { Server, createServer } from "http";
+import { Socket } from "net";
 import next from "next";
-import backend from "./backend";
+import path from "path";
+import { parse } from "url";
+
+const state = {
+  backendServer: undefined as Server | undefined,
+  backendSockets: [] as Socket[],
+};
 
 const dev = process.env.NODE_ENV !== "production";
 const NEXT_PORT = 3001; // Port for the Next.js app
@@ -28,14 +35,62 @@ app.prepare().then(() => {
   });
 
   nextServer.listen(NEXT_PORT, () => {
-    console.log(
-      `🔥 [next server]: running at http://localhost:${NEXT_PORT}`
-    );
+    console.log(`🔥 [next server]: running at http://localhost:${NEXT_PORT}`);
   });
 
-  backend.listen(BACKEND_PORT, () =>
-    console.log(
-      `🔥 [backend server]: running at http://localhost:${BACKEND_PORT}`
-    )
-  );
+  function startBackendServer() {
+    state.backendServer = (require("./backend") as unknown as Server).listen(
+      BACKEND_PORT,
+      () => {
+        console.log(
+          `🔥 [backend server]: running at http://localhost:${BACKEND_PORT}`
+        );
+      }
+    );
+    state.backendServer.on("connection", (socket) => {
+      console.log("Add socket", state.backendSockets.length + 1);
+      state.backendSockets.push(socket);
+    });
+  }
+
+  function pathCheck(id: string) {
+    return id.startsWith(path.join(__dirname, "backend"));
+  }
+
+  function restartBackendServer() {
+    // clean the cache
+    Object.keys(require.cache).forEach((id) => {
+      if (pathCheck(id)) {
+        console.log("Reloading", id);
+        delete require.cache[id];
+      }
+    });
+
+    state.backendSockets.forEach((socket, index) => {
+      console.log("Destroying socket", index + 1);
+      if (socket.destroyed === false) {
+        socket.destroy();
+      }
+    });
+
+    state.backendSockets = [];
+
+    state.backendServer?.close(() => {
+      console.log("Server is closed");
+      console.log("\n----------------- restarting -------------");
+      startBackendServer();
+    });
+  }
+
+  startBackendServer();
+  chokidar.watch("./backend").on("all", (event, at) => {
+    if (event === "add") {
+      console.log("Watching for", at);
+    }
+
+    if (event === "change") {
+      console.log("Changes at", at);
+      restartBackendServer();
+    }
+  });
 });

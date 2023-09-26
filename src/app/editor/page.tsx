@@ -1,11 +1,20 @@
-"use client";
+"use client"
 import Button from "@/components/atoms/Button";
-import EditorBlock from "@/components/organisms/EditorBlock";
 import EmojiPicker from "@/components/organisms/EmojiPicker";
 import { OutputData } from "@editorjs/editorjs";
 import Blocks from "editorjs-blocks-react-renderer";
 import Image from "next/image";
 import { useState } from "react";
+import dynamic from "next/dynamic";
+
+// important that we use dynamic loading here
+// editorjs should only be rendered on the client side.
+const EditorBlock = dynamic(
+  () => import("@/components/organisms/EditorBlock"),
+  {
+    ssr: false,
+  }
+);
 
 const page = () => {
   const [edit, setEdit] = useState(false);
@@ -24,7 +33,7 @@ const page = () => {
         id: "A_ITZPFxrY",
         type: "paragraph",
         data: {
-          text: "Hey. Meet the new Editor. On this page you can see it in action — try to edit this text.",
+          text: "Hey. Meeting the new Editor. On this page you can see it in action — try to edit this text.",
         },
       },
       {
@@ -126,6 +135,19 @@ const page = () => {
             url: "https://codex.so/public/app/img/external/codex2x.png",
           },
           caption: "",
+          withBorder: false,
+          stretched: false,
+          withBackground: false,
+        },
+      },
+      {
+        id: "V4Zozs0Lfq",
+        type: "image",
+        data: {
+          file: {
+            url: "https://www.tesla.com/tesla_theme/assets/img/_vehicle_redesign/roadster_and_semi/roadster/hero.jpg",
+          },
+          caption: "Roadster // tesla.com",
           withBorder: false,
           stretched: false,
           withBackground: false,
