@@ -1,5 +1,9 @@
+"use client";
+import {
+  Emoji,
+  EmojiStyle
+} from "emoji-picker-react";
 import Image from "next/image";
-import React from "react";
 
 interface ICardProp {
   image: string;
@@ -13,13 +17,13 @@ const TutorialCard = (card: ICardProp) => {
   return (
     <a href={card.link}>
       <div className=" flex flex-1 p-4 gap-4 items-center bg-[#DEE6E5] rounded-[10px]">
-        <Image
-          src={card.image}
-          width={98}
-          height={98}
-          className=" rounded-[10px]"
-          alt={""}
-        />
+        <div className=" p-6 bg-white rounded-[10px]">
+          <Emoji
+            unified={card.image}
+            emojiStyle={EmojiStyle.NATIVE}
+            size={50}
+          />
+        </div>
         <div className=" flex flex-col gap-2">
           <p className=" text-xl font-semibold">{card.title}</p>
           <div className=" flex gap-4 items-center">

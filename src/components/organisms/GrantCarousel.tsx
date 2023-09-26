@@ -12,14 +12,14 @@ interface carousel {
 const GrantCarousel = () => {
   const link = {
     project: [
-      { institution: "crystalrohr", id: 1 },
-      { institution: "uveryderiv", id: 2 },
-      { institution: "crystals", id: 3 },
+      { institution: "crystalrohr", id: 1, emoji: "1f62a" },
+      { institution: "uveryderiv", id: 2, emoji: "1f62a" },
+      { institution: "crystals", id: 3, emoji: "1f62a" },
     ],
     docfund: [
-      { institution: "raspberry", id: 1 },
-      { institution: "orange", id: 2 },
-      { institution: "mango", id: 3 },
+      { institution: "raspberry", id: 1, emoji: "1f62a" },
+      { institution: "orange", id: 2, emoji: "1f62a" },
+      { institution: "mango", id: 3, emoji: "1f62a" },
     ],
   };
 
@@ -54,6 +54,7 @@ const GrantCarousel = () => {
                 key={index}
                 institution={item.institution}
                 href={`/grants/projects/${item.id}`}
+                image={item.emoji}
               />
             ))}
           </>
@@ -64,6 +65,7 @@ const GrantCarousel = () => {
                 key={index}
                 institution={item.institution}
                 href={`/grants/docfunds/${item.id}`}
+                image={item.emoji}
               />
             ))}
           </>

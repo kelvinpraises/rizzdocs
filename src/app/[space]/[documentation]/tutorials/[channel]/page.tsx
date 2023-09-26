@@ -12,7 +12,7 @@ const page = () => {
         tag="FVM Tutorials"
         cardArray={[
           {
-            image: "/pic.svg",
+            image: "1f62a",
             title: "Adding deals to filecoin using light house deals",
             datePosted: 5,
             authorPfp: "/author.svg",

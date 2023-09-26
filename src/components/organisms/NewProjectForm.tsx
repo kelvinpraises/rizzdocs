@@ -8,6 +8,8 @@ import EmojiPicker from "./EmojiPicker";
 const NewProjectForm = () => {
   const [selectedEmoji, setSelectedEmoji] = useState();
 
+
+
   return (
     <div className=" flex-1 bg-white rounded-[10px] p-8 overflow-y-scroll flex flex-col gap-8 items-start">
       <TextHead

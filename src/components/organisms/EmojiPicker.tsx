@@ -18,6 +18,7 @@ const EmojiPicker = ({
   function onClick(emojiData: EmojiClickData, event: MouseEvent) {
     setSelectedEmoji(emojiData.unified);
     _setSelectedEmoji(emojiData.unified);
+    console.log(selectedEmoji)
   }
 
   return (
