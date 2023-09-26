@@ -1,7 +1,8 @@
 import React from "react";
 
 interface inputProps {
-  label: string;
+  date?: boolean;
+  label?: string;
   input: boolean;
   value: string;
   setValue: React.ChangeEventHandler<HTMLElement>;
@@ -9,20 +10,20 @@ interface inputProps {
 
 const Input = (prop: inputProps) => {
   return (
-    <div className=" flex flex-col gap-2">
-      <p className=" text-sm font-medium">{prop.label}</p>
+    <div className=" flex flex-col gap-2 w-full">
+      {prop.label && <p className=" text-sm font-medium">{prop.label}</p>}
       {prop.input ? (
         <input
-          type="text"
-          className=" bg-[#DEE6E5] p-4 rounded-md"
-          value={prop.value}
-          onChange={prop.setValue}
+          type={prop.date ? "datetime-local" : "text"}
+          className=" bg-[#DEE6E5] p-4 rounded-md outline-none w-full"
+          // value={prop.value}
+          // onChange={prop.setValue}
         />
       ) : (
         <textarea
-          className=" bg-[#DEE6E5] p-4 rounded-md h-[113px]"
-          value={prop.value}
-          onChange={prop.setValue}
+          className=" bg-[#DEE6E5] p-4 rounded-md h-[113px] outline-none"
+          // value={prop.value}
+          // onChange={prop.setValue}
         />
       )}
     </div>

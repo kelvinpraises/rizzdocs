@@ -206,7 +206,7 @@ const VideoCall = ({
   });
 
   return (
-    <div className="flex flex-col w-screen h-screen bg-[#ffffff]">
+    <div className="flex flex-col w-full h-full bg-[#ffffff] rounded-[10px]">
       <div className="flex justify-between items-center"></div>
       <div className="w-full h-full" ref={gridRef}>
         <TransitionGroup className="w-full h-full p-2 gap-2 flex flex-wrap items-center justify-center">
