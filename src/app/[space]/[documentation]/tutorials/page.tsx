@@ -1,5 +1,5 @@
+import LibraryCarousel from "@/components/organisms/LibraryCarousel";
 import MainScreen from "@/components/organisms/MainScreen";
-import SpaceCarousel from "@/components/organisms/SpaceCarousel";
 import React from "react";
 
 const page = () => {
@@ -10,8 +10,8 @@ const page = () => {
         subtitle="Supporting impactful retroactive project fundings for stakeholders and builders"
         cardArray={[
           {
-            typeIsLink:true,
-            href:"/space/id/tutorials/1",
+            typeIsLink: true,
+            href: "/space/id/tutorials/1",
             title: "Official",
             text: "Create pooled funds to support LX Devs in your community.",
             buttonText: "Create New DocFund",
@@ -19,18 +19,17 @@ const page = () => {
             buttonImg: "enter.svg",
           },
           {
-            typeIsLink:true,
-            href:"/space/id/tutorials/1",
+            typeIsLink: true,
+            href: "/space/id/tutorials/1",
             title: "Jeremy",
             text: "Showcase a project to qualify for an ecosystem funding round.",
             buttonText: "Showcase Project",
             buttonClick: "",
             buttonImg: "enter.svg",
           },
-
         ]}
       />
-      <SpaceCarousel />
+      <LibraryCarousel />
     </>
   );
 };

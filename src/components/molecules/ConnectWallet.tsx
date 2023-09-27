@@ -8,7 +8,6 @@ const ConnectWallet = () => {
       <Image src={'/wand.svg'} alt={'wand'} width={30} height={30} />
       <p className=' text-center'>Connect your wallet to interact and see your projects </p>
       <Button text={'Connect wallet'} handleClick={undefined} />
-
     </div>
   )
 }

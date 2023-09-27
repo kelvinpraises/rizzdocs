@@ -1,11 +1,10 @@
-"use client"
+"use client";
 import Button from "@/components/atoms/Button";
-import EmojiPicker from "@/components/organisms/EmojiPicker";
 import { OutputData } from "@editorjs/editorjs";
 import Blocks from "editorjs-blocks-react-renderer";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState } from "react";
-import dynamic from "next/dynamic";
 
 // important that we use dynamic loading here
 // editorjs should only be rendered on the client side.
@@ -158,91 +157,101 @@ const page = () => {
   });
 
   return (
-    <>
-      <div className="container max-w-4xl bg-white h-min p-8 rounded-[20px]">
-        {edit ? (
-          <EditorBlock
-            data={data}
-            onChange={setData}
-            holder="editorjs-container"
-          />
-        ) : (
-          <Blocks
-            data={data as any}
-            config={{
-              code: {
-                className: "language-js",
-              },
-              delimiter: {
-                className: "border-[#5c93bb2b] border-2 w-[60%] my-8 mx-auto",
-              },
-              embed: {
-                className: "border-0",
-              },
-              header: {
-                className:
-                  "font-semibold text-2xl pb-2 my-7 text-[#020f18b5]  border-[#5c93bb2b] border-b-[1px]",
-              },
-              image: {
-                className: "w-full max-w-screen-md mx-auto m-8",
-                actionsClassNames: {
-                  stretched: "w-full h-80 object-cover",
-                  withBorder: "border border-2",
-                  withBackground: "p-2",
-                },
-              },
-              list: {
-                className: "list-inside pl-8 leading-9 list-disc",
-              },
-              paragraph: {
-                className: "text-base text-opacity-85 leading-8 py-2 ",
-                actionsClassNames: {
-                  alignment: "text-{alignment}", // This is a substitution placeholder: left or center.
-                },
-              },
-              quote: {
-                className: "py-4 px-6 italic font-serif",
-              },
-              table: {
-                className: "table-auto",
-              },
-            }}
-          />
-        )}
-        {!edit && (
-          <div className=" flex gap-6 py-8 items-center mt-8 border-[#5c93bb2b] border-t-[1px]">
-            <Image
-              src={"/author.svg"}
-              alt={""}
-              width={80}
-              height={80}
-              className=" rounded-full max-w-[80px] w-full"
+    <div className=" flex flex-col items-center w-full">
+      <div className=" my-16 w-full flex flex-col gap-4">
+        <p className=" text-[35px] font-semibold text-[#020f18b5] text-center">
+          The WYSIWYG editor layout in Rizzdocs
+        </p>
+        <p className=" text-sm text-center">
+        2022/03/17に公開
+        </p>
+      </div>
+      <div className=" flex flex-1 gap-8 ">
+        <div className="container max-w-4xl bg-white h-min p-8 rounded-[10px] shadow-[0px_4px_15px_5px_rgba(226,229,239,0.25)]">
+          {edit ? (
+            <EditorBlock
+              data={data}
+              onChange={setData}
+              holder="editorjs-container"
             />
-            <div className=" flex flex-col gap-2">
-              <p className=" font-semibold text-lg">T.N</p>
-              <p>
-                Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-                Delectus ad doloremque quod praesentium impedit, deserunt
-                mollitia ducimus laudantium. Ad, voluptas?
-              </p>
+          ) : (
+            <Blocks
+              data={data as any}
+              config={{
+                code: {
+                  className: "language-js",
+                },
+                delimiter: {
+                  className: "border-[#5c93bb2b] border-2 w-[60%] my-8 mx-auto",
+                },
+                embed: {
+                  className: "border-0",
+                },
+                header: {
+                  className:
+                    "font-semibold text-2xl pb-2 my-7 text-[#020f18b5]  border-[#5c93bb2b] border-b-[1px]",
+                },
+                image: {
+                  className: "w-full max-w-screen-md mx-auto m-8",
+                  actionsClassNames: {
+                    stretched: "w-full h-80 object-cover",
+                    withBorder: "border border-2",
+                    withBackground: "p-2",
+                  },
+                },
+                list: {
+                  className: "list-inside pl-8 leading-9 list-disc",
+                },
+                paragraph: {
+                  className: "text-base text-opacity-85 leading-8 py-2 ",
+                  actionsClassNames: {
+                    alignment: "text-{alignment}", // This is a substitution placeholder: left or center.
+                  },
+                },
+                quote: {
+                  className: "py-4 px-6 italic font-serif",
+                },
+                table: {
+                  className: "table-auto",
+                },
+              }}
+            />
+          )}
+          {!edit && (
+            <div className=" flex gap-6 py-8 items-center mt-8 border-[#5c93bb2b] border-t-[1px]">
+              <Image
+                src={"/author.svg"}
+                alt={""}
+                width={80}
+                height={80}
+                className=" rounded-full max-w-[80px] w-full"
+              />
+              <div className=" flex flex-col gap-2">
+                <p className=" font-semibold text-lg">T.N</p>
+                <p>
+                  Lorem, ipsum dolor sit amet consectetur adipisicing elit.
+                  Delectus ad doloremque quod praesentium impedit, deserunt
+                  mollitia ducimus laudantium. Ad, voluptas?
+                </p>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      <div className=" w-[300px] p-8 h-min flex flex-col rounded-[10px] bg-white shadow-[0px4px15px5px,rgba(226,229,239,0.25)] items-start sticky top-0">
-        {[1, 2, 3, 4, 5, 6].map((item, index) => (
-          <div className=" flex gap-3" key={index}>
-            <div className=" flex flex-col items-center">
-              <div className=" bg-[#b0d3f9] w-3  h-3 rounded-full border-2 border-white" />
-              <div className=" bg-[#b0d3f9] w-[2px]  h-8" />
+        <div className=" w-[300px] p-8 h-min flex flex-col rounded-[10px] bg-white  shadow-[0px_4px_15px_5px_rgba(226,229,239,0.25)] items-start sticky top-0">
+          {[1, 2, 3, 4, 5, 6].map((item, index) => (
+            <div className=" flex gap-3" key={index}>
+              <div className=" flex flex-col items-center">
+                <div className=" bg-[#b0d3f9] w-3  h-3 rounded-full border-2 border-white" />
+                <div className=" bg-[#b0d3f9] w-[2px]  h-8" />
+              </div>
+              <h2 className=" font-bold text-sm mt-[-5px]">{item}</h2>
             </div>
-            <h2 className=" font-bold text-sm mt-[-5px]">{item}</h2>
-          </div>
-        ))}
-        <Button text={"change view"} handleClick={() => setEdit(!edit)} />
+          ))}
+          <Button text={"change view"} handleClick={() => setEdit(!edit)} />
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 

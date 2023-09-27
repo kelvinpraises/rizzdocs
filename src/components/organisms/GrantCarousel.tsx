@@ -1,15 +1,12 @@
 "use client";
-
-import React, { useState } from "react";
+import { useState } from "react";
 import GrantCard from "../molecules/GrantCard";
-
-interface carousel {
-  type?: string;
-  institution?: string[];
-  connected?: boolean;
-}
+import { useStore } from "@/store/useStore";
+import ConnectWallet from "../molecules/ConnectWallet";
 
 const GrantCarousel = () => {
+  const appActive = useStore((store) => store.appActive);
+
   const link = {
     project: [
       { institution: "crystalrohr", id: 1, emoji: "1f62a" },
@@ -46,31 +43,38 @@ const GrantCarousel = () => {
           DocFunds
         </button>
       </div>
-      <div className="flex flex-col gap-8 p-8 overflow-y-scroll">
-        {activeButton == "projects" ? (
-          <>
-            {link.project.map((item, index) => (
-              <GrantCard
-                key={index}
-                institution={item.institution}
-                href={`/grants/projects/${item.id}`}
-                emoji={item.emoji}
-              />
-            ))}
-          </>
-        ) : (
-          <>
-            {link.docfund.map((item, index) => (
-              <GrantCard
-                key={index}
-                institution={item.institution}
-                href={`/grants/docfunds/${item.id}`}
-                emoji={item.emoji}
-              />
-            ))}
-          </>
-        )}
-      </div>
+      {appActive ? (
+        <div className="flex flex-col gap-8 p-8 overflow-y-scroll">
+          {activeButton == "projects" ? (
+            <>
+              {link.project.map((item, index) => (
+                <GrantCard
+                  key={index}
+                  institution={item.institution}
+                  href={`/grants/projects/${item.id}`}
+                  emoji={item.emoji}
+                />
+              ))}
+            </>
+          ) : (
+            <>
+              {link.docfund.map((item, index) => (
+                <GrantCard
+                  key={index}
+                  institution={item.institution}
+                  href={`/grants/docfunds/${item.id}`}
+                  emoji={item.emoji}
+                />
+              ))}
+            </>
+          )}
+        </div>
+      ) : (
+        <div className=" flex-1 grid place-items-center">
+
+          <ConnectWallet />
+        </div>
+      )}
     </div>
   );
 };

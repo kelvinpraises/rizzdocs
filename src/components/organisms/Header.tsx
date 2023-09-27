@@ -1,8 +1,7 @@
 "use client";
-import React from "react";
-import Button from "../atoms/Button";
 import useSIWE from "@/hooks/siwe";
 import { useStore } from "@/store/useStore";
+import Button from "../atoms/Button";
 
 const Header = () => {
   const { connectWallet, disconnectWallet } = useSIWE();

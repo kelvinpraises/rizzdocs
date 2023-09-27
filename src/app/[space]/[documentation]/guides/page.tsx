@@ -1,5 +1,5 @@
 import MainScreen from "@/components/organisms/MainScreen";
-import SpaceCarousel from "@/components/organisms/SpaceCarousel";
+import LibraryCarousel from "@/components/organisms/LibraryCarousel";
 import React from "react";
 
 const page = () => {
@@ -23,10 +23,9 @@ const page = () => {
             buttonClick: "",
             buttonImg: "enter.svg",
           },
-
         ]}
       />
-      <SpaceCarousel />
+      <LibraryCarousel />
     </>
   );
 };
