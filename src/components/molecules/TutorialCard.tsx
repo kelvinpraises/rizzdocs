@@ -14,7 +14,7 @@ interface ICardProp {
 const TutorialCard = (card: ICardProp) => {
   return (
     <a href={card.link}>
-      <div className=" flex flex-1 p-4 gap-4 items-center bg-[#DEE6E5] rounded-[10px]">
+      <div className=" flex flex-1 p-4 gap-4 items-center bg-[#F2F4F8] rounded-[10px] hover:bg-[#DEE6E5]">
         <div className="p-4 bg-white rounded-[10px]">
           <Emoji className=" w-14 text-5xl" emoji={card.emoji} />
         </div>

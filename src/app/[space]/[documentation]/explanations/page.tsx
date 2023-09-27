@@ -10,6 +10,8 @@ const page = () => {
         subtitle="Supporting impactful retroactive project fundings for stakeholders and builders"
         cardArray={[
           {
+            typeIsLink:true,
+            href:"/space/id/explanations/1",
             title: "Official",
             text: "Create pooled funds to support LX Devs in your community.",
             buttonText: "Create New DocFund",
