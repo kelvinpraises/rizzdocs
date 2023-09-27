@@ -1,11 +1,13 @@
 import React from "react";
 
 interface inputProps {
-  date?: boolean;
+  type?: string;
   label?: string;
   input: boolean;
   value: string;
-  setValue: React.ChangeEventHandler<HTMLElement>;
+  onChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => void;
 }
 
 const Input = (prop: inputProps) => {
@@ -14,16 +16,16 @@ const Input = (prop: inputProps) => {
       {prop.label && <p className=" text-sm font-medium">{prop.label}</p>}
       {prop.input ? (
         <input
-          type={prop.date ? "datetime-local" : "text"}
+          type={prop.type ? prop.type : "text"}
           className=" bg-[#DEE6E5] p-4 rounded-md outline-none w-full"
-          // value={prop.value}
-          // onChange={prop.setValue}
+          value={prop.value}
+          onChange={prop.onChange}
         />
       ) : (
         <textarea
           className=" bg-[#DEE6E5] p-4 rounded-md h-[113px] outline-none"
-          // value={prop.value}
-          // onChange={prop.setValue}
+          value={prop.value}
+          onChange={prop.onChange}
         />
       )}
     </div>

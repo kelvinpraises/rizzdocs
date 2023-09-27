@@ -12,7 +12,7 @@ interface screenProps {
   linkhref?: string;
 
   cardArray?: {
-    image: string;
+    emoji: string;
     title: string;
     datePosted: number;
     authorPfp: string;
@@ -33,7 +33,7 @@ const ChannelScreen = (props: screenProps) => {
         {props.cardArray?.map((card, index) => (
           <TutorialCard
             key={index}
-            image={card.image}
+            emoji={card.emoji}
             title={card.title}
             datePosted={card.datePosted}
             authorPfp={card.authorPfp}

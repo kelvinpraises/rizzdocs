@@ -1,24 +1,31 @@
 "use client";
 import * as Popover from "@radix-ui/react-popover";
-import { data } from "autoprefixer";
-import _EmojiPicker, {
-  Emoji,
-  EmojiClickData,
-  EmojiStyle,
-} from "emoji-picker-react";
-import { useState } from "react";
+import { EmojiClickData, EmojiStyle } from "emoji-picker-react";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+import Emoji from "../atoms/Emoji";
+import { NewDocFund } from "./CreateNewDocFund";
+
+const _EmojiPicker = dynamic(() => import("emoji-picker-react"), {
+  ssr: false,
+  loading: () => <p>Loading ...</p>,
+});
 
 const EmojiPicker = ({
   setSelectedEmoji,
 }: {
-  setSelectedEmoji: (emoji: string) => void;
+  setSelectedEmoji: React.Dispatch<Partial<NewDocFund>>;
 }) => {
-  const [selectedEmoji, _setSelectedEmoji] = useState<string>("");
+  const [selectedEmoji, _setSelectedEmoji] = useState<string>("1f60a");
+  useEffect(() => {
+    // initialize setSelected with default emoji
+    setSelectedEmoji({ selectedEmoji });
+  }, []);
 
   function onClick(emojiData: EmojiClickData, event: MouseEvent) {
-    setSelectedEmoji(emojiData.unified);
+    setSelectedEmoji({ selectedEmoji: emojiData.unified });
     _setSelectedEmoji(emojiData.unified);
-    console.log(selectedEmoji)
+    console.log("called");
   }
 
   return (
@@ -26,14 +33,10 @@ const EmojiPicker = ({
       <Popover.Trigger asChild>
         {selectedEmoji ? (
           <button
-            className="border-[1.5px] border-dashed border-white rounded-[5px] p-[2px] text-2xl font-emoji-color text-text-slatePlaceholder"
+            className="border-[1.5px] border-dashed border-white rounded-[5px] py-[2px] px-1 text-2xl font-emoji text-text-slatePlaceholder"
             aria-label="Choose emoji"
           >
-            <Emoji
-              unified={selectedEmoji}
-              emojiStyle={EmojiStyle.NATIVE}
-              size={24}
-            />
+            <Emoji emoji={selectedEmoji} />
           </button>
         ) : (
           <button

@@ -7,8 +7,8 @@ var cors = require("cors");
 import db from "./db";
 
 const app = express();
+app.use(cors({ credentials: true, origin: "http://localhost:3001" }));
 app.use(express.json());
-app.use(cors());
 app.use(
   Session({
     name: "rizzDocs",
@@ -81,14 +81,29 @@ app.post("/verify", async function (req, res) {
   }
 });
 
-app.get("/logout", (req, _) => {
+app.get("/logout", (req, res) => {
   req.session.destroy((e) => {
     const error = e as unknown as Error;
     console.log(error);
   });
+  res.setHeader("Content-Type", "text/plain");
+  res.send(`You have been logged out`);
 });
 
-app.get("/personal-information", function (req, res) {
+app.get("/verifyAuthentication", function (req, res) {
+  if (!req.session.siwe) {
+    res.json({
+      authenticated: false,
+    });
+    return;
+  }
+  res.json({
+    authenticated: true,
+    address: req.session.siwe.address,
+  });
+});
+
+app.get("/template", function (req, res) {
   if (!req.session.siwe) {
     res.status(401).json({ message: "You have to first sign_in" });
     return;
@@ -106,6 +121,11 @@ app.get("/personal-information", function (req, res) {
 
 // Store a new user
 app.post("/new-user", (req, res) => {
+  if (!req.session.siwe) {
+    res.status(401).json({ message: "You have to first sign_in" });
+    return;
+  }
+
   // Assuming you have a JSON request body with user information
   const { name, address, avatarUrl } = req.body;
 
@@ -166,15 +186,73 @@ app.get("/grants/ecosystem-projects", (req, res) => {
   });
 });
 
-// TODO: get fund by id
-// TODO: get project by id
+// Get a DocFund by ID
+app.get("/grants/ecosystem-doc-funds/:docFundId", (req, res) => {
+  if (!req.session.siwe) {
+    res.status(401).json({ message: "You have to first sign_in" });
+    return;
+  }
+
+  const { docFundId } = req.params;
+  const selectQuery = `
+    SELECT * FROM DocFunds
+    WHERE docFundId = ?
+  `;
+
+  db.get(selectQuery, [docFundId], (err, docFund) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+
+    if (!docFund) {
+      res.status(404).json({ message: "DocFund not found" });
+      return;
+    }
+
+    res.json(docFund);
+  });
+});
+
+// Get a Project by ID
+app.get("/grants/ecosystem-projects/:projectId", (req, res) => {
+  if (!req.session.siwe) {
+    res.status(401).json({ message: "You have to first sign_in" });
+    return;
+  }
+
+  const { projectId } = req.params;
+  const selectQuery = `
+    SELECT * FROM Projects
+    WHERE projectId = ?
+  `;
+
+  db.get(selectQuery, [projectId], (err, project) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+
+    if (!project) {
+      res.status(404).json({ message: "Project not found" });
+      return;
+    }
+
+    res.json(project);
+  });
+});
 
 // Create a new project
 app.post("/grants/ecosystem-projects", (req, res) => {
-  const { createdBy, tokensRequested, emoji, description } = req.body;
+  if (!req.session.siwe) {
+    res.status(401).json({ message: "You have to first sign_in" });
+    return;
+  }
+
+  const { tokensRequested, emoji, description } = req.body;
   const insertQuery = `
     INSERT INTO Projects (createdBy, tokensRequested, emoji, description)
-    VALUES (${createdBy}, ${tokensRequested}, '${emoji}', '${description}')
+    VALUES (${req.session.siwe.address}, ${tokensRequested}, '${emoji}', '${description}')
   `;
 
   db.run(insertQuery, function (err) {
@@ -192,8 +270,12 @@ app.post("/grants/ecosystem-projects", (req, res) => {
 
 // Create a new docFund
 app.post("/grants/ecosystem-doc-funds", (req, res) => {
+  if (!req.session.siwe) {
+    res.status(401).json({ message: "You have to first sign_in" });
+    return;
+  }
+
   const {
-    createdBy,
     tokenAmount,
     emoji,
     description,
@@ -203,7 +285,7 @@ app.post("/grants/ecosystem-doc-funds", (req, res) => {
   } = req.body;
   const insertQuery = `
     INSERT INTO DocFunds (createdBy, tokenAmount, emoji, description, registrationEnd, allocationEnd, createdAt)
-    VALUES (${createdBy}, ${tokenAmount}, '${emoji}', '${description}', ${registrationEnd}, ${allocationEnd}, ${createdAt})
+    VALUES (${req.session.siwe.address}, ${tokenAmount}, '${emoji}', '${description}', ${registrationEnd}, ${allocationEnd}, ${createdAt})
   `;
 
   db.run(insertQuery, function (err) {
@@ -223,6 +305,11 @@ app.post("/grants/ecosystem-doc-funds", (req, res) => {
 app.post(
   "/grants/ecosystem-doc-funds/showcase/:docFundId/:projectId",
   (req, res) => {
+    if (!req.session.siwe) {
+      res.status(401).json({ message: "You have to first sign_in" });
+      return;
+    }
+
     const { docFundId, projectId } = req.params;
     const insertQuery = `
     INSERT INTO ShowcasedProjects (docFundId, projectId)
@@ -242,6 +329,11 @@ app.post(
 
 // Get all project details under a specific doc-fund
 app.get("/grants/ecosystem-doc-funds/projects/:docFundId", (req, res) => {
+  if (!req.session.siwe) {
+    res.status(401).json({ message: "You have to first sign_in" });
+    return;
+  }
+
   const { docFundId } = req.params;
   const selectQuery = `
     SELECT P.*
@@ -262,6 +354,11 @@ app.get("/grants/ecosystem-doc-funds/projects/:docFundId", (req, res) => {
 
 // Allocate funds to a doc-fund (expecting an array of allocations)
 app.put("/grants/ecosystem-doc-funds/allocate/:docFundId", (req, res) => {
+  if (!req.session.siwe) {
+    res.status(401).json({ message: "You have to first sign_in" });
+    return;
+  }
+
   const { docFundId } = req.params;
   const allocations: { amount: number; projectId: string }[] = req.body; // Expecting an array of allocation objects
 
@@ -289,101 +386,6 @@ app.put("/grants/ecosystem-doc-funds/allocate/:docFundId", (req, res) => {
       res.status(404).json({ error: "DocFund not found" });
       return;
     }
-
-    if (totalAllocation > docFund.tokenAmount) {
-      res
-        .status(400)
-        .json({ error: "Total allocation exceeds docFund tokenAmount" });
-      return;
-    }
-
-    // All validations passed, insert the allocations into the database
-    const placeholder = allocations
-      .map((allocation) => {
-        const { projectId, amount } = allocation;
-        return `(${"2"}, ${docFundId}, ${projectId}, ${amount})`;
-      })
-      .join(",");
-
-    const insertQuery = `
-    INSERT INTO AllocatedProjects (allocatedBy, docFundId, projectId, amount)
-    VALUES ${placeholder}
-    ON CONFLICT (allocatedBy, docFundId, projectId)
-    DO UPDATE SET amount = excluded.amount
-    `;
-
-    db.run(insertQuery, function (err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json({ message: "Allocations updated successfully!" });
-    });
-  });
-});
-
-// Get all allocators and their allocations under a specific doc-fund
-app.get("/grants/ecosystem-doc-funds/allocators/:docFundId", (req, res) => {
-  const { docFundId } = req.params;
-  const selectQuery = `
-    SELECT U.name AS allocatorName, U.address AS allocatorAddress,
-           AP.projectId AS allocatedProjectId, AP.amount AS allocationAmount
-    FROM AllocatedProjects AP
-    INNER JOIN Users U ON AP.allocatedBy = U.userId
-    WHERE AP.docFundId = ${docFundId}
-  `;
-
-  console.log("what?");
-
-  db.all(selectQuery, (err, results) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    console.log("what?");
-    console.log(results);
-
-    // Organize the results into the desired JSON structure
-    const allocatorsMap = new Map(); // Map to group allocators and their allocations
-    results.forEach((row) => {
-      const {
-        allocatorName,
-        allocatorAddress,
-        allocatedProjectId,
-        allocationAmount,
-      } = row as any;
-
-      console.log(
-        allocatorName,
-        " ",
-        allocatorAddress,
-        " ",
-        allocatedProjectId,
-        " ",
-        allocationAmount
-      );
-
-      if (!allocatorsMap.has(allocatorName)) {
-        // Create a new allocator entry if it doesn't exist in the map
-        allocatorsMap.set(allocatorName, {
-          name: allocatorName,
-          address: allocatorAddress,
-          allocated: [],
-        });
-      }
-
-      // Add allocation details to the allocator's allocated array
-      const allocator = allocatorsMap.get(allocatorName);
-      allocator.allocated.push({
-        projectId: allocatedProjectId,
-        amount: allocationAmount,
-      });
-    });
-
-    // Convert the map values to an array to match the specified signature
-    const allocatorsArray = Array.from(allocatorsMap.values());
-
-    res.json(allocatorsArray);
   });
 });
 

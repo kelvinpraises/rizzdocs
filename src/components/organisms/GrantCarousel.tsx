@@ -54,7 +54,7 @@ const GrantCarousel = () => {
                 key={index}
                 institution={item.institution}
                 href={`/grants/projects/${item.id}`}
-                image={item.emoji}
+                emoji={item.emoji}
               />
             ))}
           </>
@@ -65,7 +65,7 @@ const GrantCarousel = () => {
                 key={index}
                 institution={item.institution}
                 href={`/grants/docfunds/${item.id}`}
-                image={item.emoji}
+                emoji={item.emoji}
               />
             ))}
           </>

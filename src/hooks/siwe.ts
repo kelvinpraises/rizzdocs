@@ -1,15 +1,28 @@
 import { BrowserProvider } from "ethers";
 import { SiweMessage } from "siwe";
 
-const domain = window.location.host;
-const origin = window.location.origin;
-const provider = new BrowserProvider((window as any).ethereum);
+const domain = typeof window !== "undefined" ? window.location.host : undefined;
+const origin =
+  typeof window !== "undefined" ? window.location.origin : undefined;
+const provider =
+  typeof window !== "undefined"
+    ? new BrowserProvider((window as any).ethereum)
+    : undefined;
 const BACKEND_ADDR = "http://localhost:3002";
 
 const useSIWE = () => {
-  function connectWallet() {
+  function disconnectWallet(callback: () => void) {
+    fetch(`${BACKEND_ADDR}/logout`, {
+      credentials: "include",
+    }).then(() => callback());
+  }
+
+  function connectWallet(callback: () => void) {
     provider
-      .send("eth_requestAccounts", [])
+      ?.send("eth_requestAccounts", [])
+      .then(() => {
+        signInWithEthereum().then(() => callback());
+      })
       .catch(() => console.log("user rejected request"));
   }
 
@@ -30,8 +43,11 @@ const useSIWE = () => {
   }
 
   async function signInWithEthereum() {
-    const signer = await provider.getSigner();
+    const signer = await provider?.getSigner();
 
+    if (!signer) {
+      return;
+    }
     const message = await createSiweMessage(
       await signer.getAddress(),
       "Sign in with Ethereum to the app."
@@ -49,13 +65,15 @@ const useSIWE = () => {
     console.log(await res.text());
   }
 
-  async function getInformation() {
-    const res = await fetch(`${BACKEND_ADDR}/personal_information`, {
+  function verifyAuthentication(callback: (res: Response) => void) {
+    fetch(`${BACKEND_ADDR}/verifyAuthentication`, {
       credentials: "include",
+    }).then((res) => {
+      callback(res);
     });
-    console.log(await res.text());
   }
-  return { connectWallet, signInWithEthereum };
+
+  return { connectWallet, disconnectWallet, verifyAuthentication };
 };
 
 export default useSIWE;
