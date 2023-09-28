@@ -1,5 +1,5 @@
 import GrantCarousel from "@/components/organisms/GrantCarousel";
-import DocumentationScreen from "@/components/organisms/DocumentationScreen";
+import MainScreen from "@/components/organisms/MainScreen";
 import React from "react";
 
 const page = () => {
@@ -35,7 +35,7 @@ const page = () => {
   return (
     <>
       <GrantCarousel />
-      <DocumentationScreen {...data} />
+      <MainScreen {...data} />
     </>
   );
 };
