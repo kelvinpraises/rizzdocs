@@ -1,4 +1,8 @@
-// {
+{
+    "cSpell.words": [
+        "basicaly"
+    ]
+} // {
 //   "[solidity]": {
 //     "editor.defaultFormatter": "NomicFoundation.hardhat-solidity"
 //   },

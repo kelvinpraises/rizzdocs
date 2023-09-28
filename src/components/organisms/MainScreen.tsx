@@ -13,7 +13,7 @@ interface screenProps {
   cardArray?: {
     image?: string;
     title: string;
-    text: string;
+    description: string;
     buttonText: string;
     buttonClick: any;
     buttonImg?: string;
@@ -35,7 +35,7 @@ const MainScreen = (props: screenProps) => {
             image={card.image}
             key={index}
             title={card.title}
-            text={card.text}
+            description={card.description}
             buttonText={card.buttonText}
             buttonOnclick={card.buttonClick}
             buttonImg={card.buttonImg}

@@ -12,6 +12,7 @@ CREATE TABLE DocFunds (
     createdBy TEXT NOT NULL,
     tokenAmount REAL NOT NULL,
     emoji TEXT NOT NULL,
+    title TEXT NOT NULL,
     description TEXT NOT NULL,
     registrationEnd INTEGER NOT NULL,
     allocationEnd INTEGER NOT NULL,
@@ -39,6 +40,7 @@ CREATE TABLE Projects (
     createdBy TEXT NOT NULL,
     tokensRequested REAL NOT NULL,
     emoji TEXT NOT NULL,
+    title TEXT NOT NULL,
     description TEXT NOT NULL,
     FOREIGN KEY (createdBy) REFERENCES Users(userId)
 );

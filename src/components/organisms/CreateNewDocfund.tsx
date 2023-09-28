@@ -1,45 +1,58 @@
 "use client";
-import React, { useEffect, useReducer, useState } from "react";
-import TextHead from "../atoms/TextHead";
-import Input from "../atoms/Input";
+import useBackendAPI from "@/hooks/backendAPI";
+import { useRouter } from "next/navigation";
+import { useReducer } from "react";
 import Button from "../atoms/Button";
+import Input from "../atoms/Input";
+import TextHead from "../atoms/TextHead";
 import EmojiPicker from "./EmojiPicker";
+
 export interface NewDocFund {
-  selectedEmoji: string;
+  emoji: string;
   title: string;
   tokenAmount: number;
-  proposalDescription: string;
-  registrationEndDate: number;
+  description: string;
+  registrationEnd: number;
+  allocationEnd: number;
+  createdAt: number;
 }
 
 const CreateNewDocFund = () => {
+  const router = useRouter();
+  const { createDocFund } = useBackendAPI();
+
+  // TODO: Ensure the dates passed should be a time in the future.
   const [values, updateValues] = useReducer(
     (current: NewDocFund, update: Partial<NewDocFund>): NewDocFund => {
-      const updatedTokenAmount = Math.max(0, update.tokenAmount || 0);
-
       return {
         ...current,
         ...update,
-        tokenAmount: updatedTokenAmount,
-        registrationEndDate:
-          update.registrationEndDate || Math.floor(new Date().getTime() / 1000),
+        tokenAmount:
+          update.tokenAmount === undefined
+            ? current.tokenAmount
+            : isNaN(current.tokenAmount)
+            ? 0
+            : update.tokenAmount || 0,
+        registrationEnd:
+          update.registrationEnd === undefined
+            ? current.registrationEnd
+            : update.registrationEnd || Math.floor(new Date().getTime() / 1000),
+        allocationEnd:
+          update.allocationEnd === undefined
+            ? current.allocationEnd
+            : update.allocationEnd || Math.floor(new Date().getTime() / 1000),
       };
     },
     {
-      selectedEmoji: "",
+      emoji: "",
       title: "",
       tokenAmount: 0,
-      proposalDescription: "",
-      registrationEndDate: Math.floor(new Date().getTime() / 1000), // Convert to Unix timestamp already in UTC
+      description: "",
+      registrationEnd: Math.floor(new Date().getTime() / 1000), // Convert to Unix timestamp already in UTC
+      allocationEnd: Math.floor(new Date().getTime() / 1000), // Convert to Unix timestamp already in UTC
+      createdAt: Math.floor(new Date().getTime() / 1000),
     }
   );
-
-  function createDocFund() {
-    // save to backend
-    // route to the id
-  }
-
-  console.log(values);
 
   return (
     <div className=" flex-1 bg-white rounded-[10px] p-8 overflow-y-scroll flex flex-col gap-8 items-start">
@@ -71,20 +84,18 @@ const CreateNewDocFund = () => {
         <Input
           label={"Proposal Description"}
           input={false}
-          value={values.proposalDescription}
-          onChange={(e) =>
-            updateValues({ proposalDescription: e.target.value })
-          }
+          value={values.description}
+          onChange={(e) => updateValues({ description: e.target.value })}
         />
         <Input
           type="datetime-local"
           label={"Registration End Date"}
           input={true}
           value={
-            isNaN(values.registrationEndDate)
+            isNaN(values.registrationEnd)
               ? ""
               : new Date(
-                  values.registrationEndDate * 1000 -
+                  values.registrationEnd * 1000 -
                     new Date().getTimezoneOffset() * 60000 // Convert Unix timestamp already in UTC to milliseconds and factor in timezone
                 )
                   .toISOString()
@@ -93,14 +104,44 @@ const CreateNewDocFund = () => {
           onChange={
             (e) =>
               updateValues({
-                registrationEndDate: Math.floor(
+                registrationEnd: Math.floor(
+                  new Date(e.target.value).getTime() / 1000
+                ),
+              }) // Convert to Unix timestamp
+          }
+        />
+        <Input
+          type="datetime-local"
+          label={"Allocation End Date"}
+          input={true}
+          value={
+            isNaN(values.allocationEnd)
+              ? ""
+              : new Date(
+                  values.allocationEnd * 1000 -
+                    new Date().getTimezoneOffset() * 60000 // Convert Unix timestamp already in UTC to milliseconds and factor in timezone
+                )
+                  .toISOString()
+                  .substring(0, 16)
+          }
+          onChange={
+            (e) =>
+              updateValues({
+                allocationEnd: Math.floor(
                   new Date(e.target.value).getTime() / 1000
                 ),
               }) // Convert to Unix timestamp
           }
         />
       </div>
-      <Button text={"Submit"} handleClick={createDocFund} />
+      <Button
+        text={"Submit"}
+        handleClick={() =>
+          createDocFund(values, (d: string) => {
+            router.push("/grants/docfunds/" + d);
+          })
+        }
+      />
     </div>
   );
 };

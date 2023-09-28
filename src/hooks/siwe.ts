@@ -17,11 +17,32 @@ const useSIWE = () => {
     }).then(() => callback());
   }
 
-  function connectWallet(callback: () => void) {
+  function connectWallet(
+    callback: ({
+      name,
+      address,
+    }: {
+      name: string;
+      address: string;
+      avatarUrl: string;
+    }) => void
+  ) {
     provider
       ?.send("eth_requestAccounts", [])
       .then(() => {
-        signInWithEthereum().then(() => callback());
+        signInWithEthereum().then((res) => {
+          res
+            ?.json()
+            .then(
+              (userData: {
+                name: string;
+                address: string;
+                avatarUrl: string;
+              }) => {
+                callback(userData);
+              }
+            );
+        });
       })
       .catch(() => console.log("user rejected request"));
   }
@@ -62,7 +83,7 @@ const useSIWE = () => {
       body: JSON.stringify({ message, signature }),
       credentials: "include",
     });
-    console.log(await res.text());
+    return res;
   }
 
   function verifyAuthentication(callback: (res: Response) => void) {

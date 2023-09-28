@@ -1,29 +1,30 @@
 import { useCallback } from "react";
 
-interface User {
+export interface User {
   name: string;
-  address: string;
   avatarUrl: string;
 }
 
-interface Project {
+export interface Project {
   tokensRequested: number;
   emoji: string;
+  title: string;
   description: string;
 }
 
-interface DocFund {
-  tokenAmount: number;
+export interface DocFund {
   emoji: string;
+  title: string;
+  tokenAmount: number;
   description: string;
-  registrationEnd: string; // You may need to update this to the appropriate data type
-  allocationEnd: string; // You may need to update this to the appropriate data type
-  createdAt: string; // You may need to update this to the appropriate data type
+  registrationEnd: number;
+  allocationEnd: number;
+  createdAt: number;
 }
 
-interface Allocation {
+export interface Allocation {
   amount: number;
-  projectId: string;
+  projectId: number;
 }
 
 const useBackendAPI = () => {
@@ -51,7 +52,6 @@ const useBackendAPI = () => {
         credentials: "include",
       }
     );
-
     return await res.json();
   }, []);
 
@@ -67,7 +67,7 @@ const useBackendAPI = () => {
   }, []);
 
   const createProject = useCallback(
-    async (project: Project, callback: () => void) => {
+    async (project: Project, callback: (docFundId: string) => void) => {
       const res = await fetch(`${BACKEND_ADDR}/grants/ecosystem-projects`, {
         method: "POST",
         headers: {
@@ -77,15 +77,51 @@ const useBackendAPI = () => {
         credentials: "include",
       });
 
-      if ((await res.json()).projectId) {
-        callback();
+      const projectId = (await res.json()).projectId;
+
+      if (projectId) {
+        callback(projectId);
       }
     },
     []
   );
 
+  const getProjectById = useCallback(async (projectId: string) => {
+    const res = await fetch(
+      `${BACKEND_ADDR}/grants/ecosystem-projects/${projectId}`,
+      {
+        credentials: "include",
+      }
+    );
+
+    if (res.ok) {
+      return (await res.json()) as Project;
+    } else if (res.status === 404) {
+      throw new Error("Project not found");
+    } else {
+      throw new Error("Error fetching project");
+    }
+  }, []);
+
+  const getDocFundById = useCallback(async (docFundId: string) => {
+    const res = await fetch(
+      `${BACKEND_ADDR}/grants/ecosystem-doc-funds/${docFundId}`,
+      {
+        credentials: "include",
+      }
+    );
+
+    if (res.ok) {
+      return await res.json();
+    } else if (res.status === 404) {
+      throw new Error("DocFund not found");
+    } else {
+      throw new Error("Error fetching DocFund");
+    }
+  }, []);
+
   const createDocFund = useCallback(
-    async (docFund: DocFund, callback: () => void) => {
+    async (docFund: DocFund, callback: (docFundId: string) => void) => {
       const res = await fetch(`${BACKEND_ADDR}/grants/ecosystem-doc-funds`, {
         method: "POST",
         headers: {
@@ -95,15 +131,17 @@ const useBackendAPI = () => {
         credentials: "include",
       });
 
-      if ((await res.json()).docFundId) {
-        callback();
+      const docFundId = (await res.json()).docFundId;
+
+      if (docFundId) {
+        callback(docFundId);
       }
     },
     []
   );
 
   const addProjectToDocFund = useCallback(
-    async (docFundId: string, projectId: string, callback: () => void) => {
+    async (docFundId: number, projectId: number, callback: () => void) => {
       const res = await fetch(
         `${BACKEND_ADDR}/grants/ecosystem-doc-funds/showcase/${docFundId}/${projectId}`,
         {
@@ -166,35 +204,18 @@ const useBackendAPI = () => {
     return await res.json();
   }, []);
 
-  const editTable = useCallback(async () => {
-    const res = await fetch(`${BACKEND_ADDR}/edit-table`, {
-      method: "POST",
-      credentials: "include",
-    });
-
-    return await res.json();
-  }, []);
-
-  const suggestEdit = useCallback(async () => {
-    const res = await fetch(`${BACKEND_ADDR}/documentation/suggestEdit`, {
-      credentials: "include",
-    });
-
-    return await res.json();
-  }, []);
-
   return {
     createUser,
     getDocFunds,
     getProjects,
     createProject,
     createDocFund,
+    getProjectById,
+    getDocFundById,
     addProjectToDocFund,
     getDocFundProjects,
     allocateFunds,
     getAllocators,
-    editTable,
-    suggestEdit,
   };
 };
 

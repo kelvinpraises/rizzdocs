@@ -6,7 +6,7 @@ import Button from "../atoms/Button";
 interface ICardProps {
   image?: string;
   title: string;
-  text: string;
+  description: string;
   buttonText: string;
   buttonOnclick: () => {};
   buttonImg?: string;
@@ -22,7 +22,7 @@ const Card1 = (card: ICardProps) => {
       )}
       <div className=" flex flex-col gap-2">
         <p className=" text-xl font-semibold">{card.title}</p>
-        <p>{card.text}</p>
+        <p>{card.description}</p>
       </div>
       <Button
         link={card.typeIsLink}

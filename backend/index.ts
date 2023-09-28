@@ -138,6 +138,7 @@ app.post("/new-user", (req, res) => {
   db.run(insertQuery, [name, address, avatarUrl], function (err) {
     if (err) {
       res.status(500).json({ error: err.message });
+      console.error(err)
       return;
     }
 
@@ -151,13 +152,11 @@ app.post("/new-user", (req, res) => {
 // Get all doc-funds with optional filtering by user
 app.get("/grants/ecosystem-doc-funds", (req, res) => {
   const { userId } = req.query;
-  let query = "SELECT * FROM DocFunds";
 
-  if (userId) {
-    query += ` WHERE createdBy = ${userId}`;
-  }
+  const query = "SELECT * FROM DocFunds WHERE createdBy = ?";
+  const params = [userId];
 
-  db.all(query, (err, rows) => {
+  db.all(query, params, (err, rows) => {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
@@ -170,13 +169,11 @@ app.get("/grants/ecosystem-doc-funds", (req, res) => {
 // Get all projects with optional filtering by user
 app.get("/grants/ecosystem-projects", (req, res) => {
   const { userId } = req.query;
-  let query = "SELECT * FROM Projects";
 
-  if (userId) {
-    query += ` WHERE createdBy = ${userId}`;
-  }
+  const query = "SELECT * FROM Projects WHERE createdBy = ?";
+  const params = [userId];
 
-  db.all(query, (err, rows) => {
+  db.all(query, params, (err, rows) => {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
@@ -188,11 +185,6 @@ app.get("/grants/ecosystem-projects", (req, res) => {
 
 // Get a DocFund by ID
 app.get("/grants/ecosystem-doc-funds/:docFundId", (req, res) => {
-  if (!req.session.siwe) {
-    res.status(401).json({ message: "You have to first sign_in" });
-    return;
-  }
-
   const { docFundId } = req.params;
   const selectQuery = `
     SELECT * FROM DocFunds
@@ -216,11 +208,6 @@ app.get("/grants/ecosystem-doc-funds/:docFundId", (req, res) => {
 
 // Get a Project by ID
 app.get("/grants/ecosystem-projects/:projectId", (req, res) => {
-  if (!req.session.siwe) {
-    res.status(401).json({ message: "You have to first sign_in" });
-    return;
-  }
-
   const { projectId } = req.params;
   const selectQuery = `
     SELECT * FROM Projects
@@ -249,10 +236,10 @@ app.post("/grants/ecosystem-projects", (req, res) => {
     return;
   }
 
-  const { tokensRequested, emoji, description } = req.body;
+  const { tokensRequested, emoji, title, description } = req.body;
   const insertQuery = `
-    INSERT INTO Projects (createdBy, tokensRequested, emoji, description)
-    VALUES (${req.session.siwe.address}, ${tokensRequested}, '${emoji}', '${description}')
+    INSERT INTO Projects (createdBy, tokensRequested, emoji, title, description)
+    VALUES ("${req.session.siwe.address}", ${tokensRequested}, '${emoji}', '${title}', '${description}')
   `;
 
   db.run(insertQuery, function (err) {
@@ -278,19 +265,21 @@ app.post("/grants/ecosystem-doc-funds", (req, res) => {
   const {
     tokenAmount,
     emoji,
+    title,
     description,
     registrationEnd,
     allocationEnd,
     createdAt,
   } = req.body;
   const insertQuery = `
-    INSERT INTO DocFunds (createdBy, tokenAmount, emoji, description, registrationEnd, allocationEnd, createdAt)
-    VALUES (${req.session.siwe.address}, ${tokenAmount}, '${emoji}', '${description}', ${registrationEnd}, ${allocationEnd}, ${createdAt})
+    INSERT INTO DocFunds (createdBy, tokenAmount, emoji, title, description, registrationEnd, allocationEnd, createdAt)
+    VALUES ("${req.session.siwe.address}", ${tokenAmount}, '${emoji}', '${title}', '${description}', ${registrationEnd}, ${allocationEnd}, ${createdAt})
   `;
 
   db.run(insertQuery, function (err) {
     if (err) {
       res.status(500).json({ error: err.message });
+      console.log(err);
       return;
     }
 
@@ -329,11 +318,6 @@ app.post(
 
 // Get all project details under a specific doc-fund
 app.get("/grants/ecosystem-doc-funds/projects/:docFundId", (req, res) => {
-  if (!req.session.siwe) {
-    res.status(401).json({ message: "You have to first sign_in" });
-    return;
-  }
-
   const { docFundId } = req.params;
   const selectQuery = `
     SELECT P.*
@@ -384,8 +368,107 @@ app.put("/grants/ecosystem-doc-funds/allocate/:docFundId", (req, res) => {
 
     if (!docFund) {
       res.status(404).json({ error: "DocFund not found" });
+      console.log("err2");
+
       return;
     }
+
+    if (totalAllocation > docFund.tokenAmount) {
+      res
+        .status(400)
+        .json({ error: "Total allocation exceeds docFund tokenAmount" });
+      return;
+    }
+
+    const sql = `
+    INSERT INTO AllocatedProjects (allocatedBy, docFundId, projectId, amount)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT (allocatedBy, docFundId, projectId)
+    DO UPDATE SET amount = excluded.amount
+    `;
+
+    // Begin a transaction
+    db.serialize(() => {
+      db.run("BEGIN TRANSACTION");
+
+      try {
+        allocations.forEach((allocation) => {
+          const { projectId, amount } = allocation;
+          db.run(sql, [
+            req.session.siwe?.address,
+            docFundId,
+            projectId,
+            amount,
+          ]);
+        });
+
+        // Commit the transaction if all insertions are successful
+        db.run("COMMIT");
+        res.json({ message: "Allocations updated successfully!" });
+      } catch (error) {
+        // Rollback the transaction if there's an error
+        db.run("ROLLBACK");
+        console.error("Transaction rolled back due to an error:", error);
+        res.status(500).json({ error });
+      }
+    });
+  });
+});
+
+// Get all allocators and their allocations under a specific doc-fund
+app.get("/grants/ecosystem-doc-funds/allocators/:docFundId", (req, res) => {
+  const { docFundId } = req.params;
+  const selectQuery = `
+    SELECT U.name AS allocatorName, U.address AS allocatorAddress,
+           AP.projectId AS allocatedProjectId, AP.amount AS allocationAmount,
+           P.title AS projectTitle, P.createdBy AS projectCreatedBy
+    FROM AllocatedProjects AP
+    INNER JOIN Users U ON AP.allocatedBy = U.userId
+    INNER JOIN Projects P ON AP.projectId = P.projectId
+    WHERE AP.docFundId = ${docFundId}
+  `;
+
+  db.all(selectQuery, (err, results) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+
+    // Organize the results into the desired JSON structure
+    const allocatorsMap = new Map(); // Map to group allocators and their allocations
+    results.forEach((row) => {
+      const {
+        allocatorName,
+        allocatorAddress,
+        allocatedProjectId,
+        allocationAmount,
+        projectTitle,
+        projectCreatedBy,
+      } = row as any;
+
+      if (!allocatorsMap.has(allocatorName)) {
+        // Create a new allocator entry if it doesn't exist in the map
+        allocatorsMap.set(allocatorName, {
+          name: allocatorName,
+          address: allocatorAddress,
+          allocated: [],
+        });
+      }
+
+      // Add allocation details to the allocator's allocated array
+      const allocator = allocatorsMap.get(allocatorName);
+      allocator.allocated.push({
+        projectId: allocatedProjectId,
+        amount: allocationAmount,
+        title: projectTitle,
+        createdBy: projectCreatedBy,
+      });
+    });
+
+    // Convert the map values to an array to match the specified signature
+    const allocatorsArray = Array.from(allocatorsMap.values());
+
+    res.json(allocatorsArray);
   });
 });
 

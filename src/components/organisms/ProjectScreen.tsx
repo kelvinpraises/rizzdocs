@@ -86,7 +86,7 @@ const ProjectScreen = () => {
             <Card1
               key={index}
               title={card.title}
-              text={card.text}
+              description={card.text}
               buttonText={card.buttonText}
               buttonOnclick={function (): {} {
                 throw new Error("Function not implemented.");
@@ -104,7 +104,7 @@ const ProjectScreen = () => {
             <Card1
               key={index}
               title={card.title}
-              text={card.text}
+              description={card.text}
               buttonText={card.buttonText}
               buttonOnclick={function (): {} {
                 throw new Error("Function not implemented.");

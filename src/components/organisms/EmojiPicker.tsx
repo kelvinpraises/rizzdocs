@@ -19,13 +19,12 @@ const EmojiPicker = ({
   const [selectedEmoji, _setSelectedEmoji] = useState<string>("1f60a");
   useEffect(() => {
     // initialize setSelected with default emoji
-    setSelectedEmoji({ selectedEmoji });
+    setSelectedEmoji({ emoji: selectedEmoji });
   }, []);
 
   function onClick(emojiData: EmojiClickData, event: MouseEvent) {
-    setSelectedEmoji({ selectedEmoji: emojiData.unified });
+    setSelectedEmoji({ emoji: emojiData.unified });
     _setSelectedEmoji(emojiData.unified);
-    console.log("called");
   }
 
   return (

@@ -10,7 +10,7 @@ const CardCarousel = () => {
         href=""
         image={"timer.svg"}
         title={"New Space"}
-        text={
+        description={
           "Create a new space that reflects what a documentation is all about"
         }
         buttonText={"Propose New Space"}
@@ -23,7 +23,7 @@ const CardCarousel = () => {
         href=""
         image={"timer.svg"}
         title={"New Documentation"}
-        text={
+        description={
           "Propose a new documentation to be added to and maintained by RizzDocs"
         }
         buttonText={"Propose Documentation"}
@@ -36,7 +36,7 @@ const CardCarousel = () => {
         href=""
         image={"timer.svg"}
         title={"New Channel"}
-        text={"Create a new channel you the "}
+        description={"Create a new channel you the "}
         buttonText={"Create Channel"}
         buttonOnclick={function (): {} {
           throw new Error("Function not implemented.");
@@ -47,7 +47,7 @@ const CardCarousel = () => {
         href="/grants"
         image={"timer.svg"}
         title={"RizzDocs Grants"}
-        text={
+        description={
           "Retro active fundings for amazing projects within the RizzDocs community "
         }
         buttonText={"Visits Grants"}
