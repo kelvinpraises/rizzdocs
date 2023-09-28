@@ -1,6 +1,6 @@
 "use client";
 import GrantCarousel from "@/components/organisms/GrantCarousel";
-import MainScreen from "@/components/organisms/MainScreen";
+import DocumentationScreen from "@/components/organisms/DocumentationScreen";
 import useBackendAPI, { DocFund } from "@/hooks/backendAPI";
 import { useEffect, useState } from "react";
 interface DocFundWithId extends DocFund {
@@ -39,7 +39,7 @@ const page = () => {
   return (
     <>
       <GrantCarousel />
-      <MainScreen {...data} />
+      <DocumentationScreen {...data} />
     </>
   );
 };

@@ -17,7 +17,7 @@ CREATE TABLE DocFunds (
     registrationEnd INTEGER NOT NULL,
     allocationEnd INTEGER NOT NULL,
     createdAt INTEGER NOT NULL,
-    FOREIGN KEY (createdBy) REFERENCES Users(userId)
+    FOREIGN KEY (createdBy) REFERENCES Users(address)
 );
 
 -- Table for allocated projects within allocators
@@ -27,7 +27,7 @@ CREATE TABLE AllocatedProjects (
     docFundId INTEGER NOT NULL,
     projectId INTEGER NOT NULL,
     amount REAL NOT NULL,
-    FOREIGN KEY (allocatedBy) REFERENCES Users(userId),
+    FOREIGN KEY (allocatedBy) REFERENCES Users(address),
     FOREIGN KEY (docFundId) REFERENCES DocFunds(docFundId),
     FOREIGN KEY (projectId) REFERENCES Projects(projectId),
     UNIQUE (allocatedBy, docFundId, projectId)
@@ -42,7 +42,7 @@ CREATE TABLE Projects (
     emoji TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
-    FOREIGN KEY (createdBy) REFERENCES Users(userId)
+    FOREIGN KEY (createdBy) REFERENCES Users(address)
 );
 
 -- Table for projects showcase

@@ -1,24 +1,58 @@
 "use client";
-import { useState } from "react";
-import GrantCard from "../molecules/GrantCard";
+import useBackendAPI from "@/hooks/backendAPI";
 import { useStore } from "@/store/useStore";
+import { useEffect, useReducer, useState } from "react";
 import ConnectWallet from "../molecules/ConnectWallet";
+import GrantCard from "../molecules/GrantCard";
+
+interface GrantCarouselState {
+  projects: {
+    title: string;
+    projectId: number;
+    emoji: string;
+  }[];
+  docFunds: {
+    title: string;
+    docFundId: number;
+    emoji: string;
+  }[];
+}
 
 const GrantCarousel = () => {
-  const appActive = useStore((store) => store.appActive);
+  const { getDocFunds, getProjects } = useBackendAPI();
 
-  const link = {
-    project: [
-      { institution: "crystalrohr", id: 1, emoji: "1f62a" },
-      { institution: "uveryderiv", id: 2, emoji: "1f62a" },
-      { institution: "crystals", id: 3, emoji: "1f62a" },
-    ],
-    docfund: [
-      { institution: "raspberry", id: 1, emoji: "1f62a" },
-      { institution: "orange", id: 2, emoji: "1f62a" },
-      { institution: "mango", id: 3, emoji: "1f62a" },
-    ],
-  };
+  const appActive = useStore((store) => store.appActive);
+  const userAddress = useStore((state) => state.userAddress);
+
+  useEffect(() => {
+    (async () => {
+      const projects = await getProjects(userAddress);
+      const docFunds = await getDocFunds(userAddress);
+
+      console.log({
+        projects,
+        docFunds,
+      });
+
+      updateValues({ projects, docFunds });
+    })();
+  }, []);
+
+  const [values, updateValues] = useReducer(
+    (
+      current: GrantCarouselState,
+      update: Partial<GrantCarouselState>
+    ): GrantCarouselState => {
+      return {
+        ...current,
+        ...update,
+      };
+    },
+    {
+      projects: [],
+      docFunds: [],
+    }
+  );
 
   const [activeButton, setActiveButton] = useState("projects");
   return (
@@ -47,22 +81,22 @@ const GrantCarousel = () => {
         <div className="flex flex-col gap-8 p-8 overflow-y-scroll">
           {activeButton == "projects" ? (
             <>
-              {link.project.map((item, index) => (
+              {values.projects.map((item, index) => (
                 <GrantCard
                   key={index}
-                  institution={item.institution}
-                  href={`/grants/projects/${item.id}`}
+                  title={item.title}
+                  href={`/grants/projects/${item.projectId}`}
                   emoji={item.emoji}
                 />
               ))}
             </>
           ) : (
             <>
-              {link.docfund.map((item, index) => (
+              {values.docFunds.map((item, index) => (
                 <GrantCard
                   key={index}
-                  institution={item.institution}
-                  href={`/grants/docfunds/${item.id}`}
+                  title={item.title}
+                  href={`/grants/docfunds/${item.docFundId}`}
                   emoji={item.emoji}
                 />
               ))}
@@ -71,7 +105,6 @@ const GrantCarousel = () => {
         </div>
       ) : (
         <div className=" flex-1 grid place-items-center">
-
           <ConnectWallet />
         </div>
       )}

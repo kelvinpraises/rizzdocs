@@ -50,7 +50,25 @@ app.post("/verify", async function (req, res) {
 
     req.session.siwe = message;
     req.session.cookie.expires = new Date(message.expirationTime!);
-    req.session.save(() => res.status(200).send(true));
+    req.session.save(() => {
+      const query = "SELECT * FROM Users WHERE address = ?";
+      const params = [req.session.siwe?.address];
+
+      db.all(query, params, (err, rows) => {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
+        }
+
+        res.json(
+          rows[0] || {
+            name: "",
+            address: req.session.siwe?.address,
+            avatar: "",
+          }
+        );
+      });
+    });
   } catch (e) {
     req.session.siwe = undefined;
     req.session.nonce = undefined;
@@ -97,9 +115,23 @@ app.get("/verifyAuthentication", function (req, res) {
     });
     return;
   }
-  res.json({
-    authenticated: true,
-    address: req.session.siwe.address,
+  const query = "SELECT * FROM Users WHERE address = ?";
+  const params = [req.session.siwe?.address];
+
+  db.all(query, params, (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+
+    res.json(
+      { ...(rows[0] as Object), authenticated: true } || {
+        name: "",
+        address: req.session.siwe?.address,
+        avatar: "",
+        authenticated: true,
+      }
+    );
   });
 });
 
@@ -127,7 +159,7 @@ app.post("/new-user", (req, res) => {
   }
 
   // Assuming you have a JSON request body with user information
-  const { name, address, avatarUrl } = req.body;
+  const { name, avatarUrl } = req.body;
 
   // Insert the new user into the Users table
   const insertQuery = `
@@ -135,25 +167,32 @@ app.post("/new-user", (req, res) => {
     VALUES (?, ?, ?)
   `;
 
-  db.run(insertQuery, [name, address, avatarUrl], function (err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
+  db.run(
+    insertQuery,
+    [name, req.session.siwe.address, avatarUrl],
+    function (err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        console.error(err);
+        return;
+      }
 
-    res.json({
-      message: "User created successfully",
-      userId: this.lastID,
-    });
-  });
+      res.json({
+        message: "User created successfully",
+        userId: this.lastID,
+      });
+    }
+  );
 });
 
 // Get all doc-funds with optional filtering by user
 app.get("/grants/ecosystem-doc-funds", (req, res) => {
   const { userId } = req.query;
 
-  const query = "SELECT * FROM DocFunds WHERE createdBy = ?";
-  const params = [userId];
+  const query = userId
+    ? "SELECT * FROM DocFunds WHERE createdBy = ?"
+    : "SELECT * FROM DocFunds";
+  const params = userId ? [userId] : [];
 
   db.all(query, params, (err, rows) => {
     if (err) {
@@ -169,8 +208,10 @@ app.get("/grants/ecosystem-doc-funds", (req, res) => {
 app.get("/grants/ecosystem-projects", (req, res) => {
   const { userId } = req.query;
 
-  const query = "SELECT * FROM Projects WHERE createdBy = ?";
-  const params = [userId];
+  const query = userId
+    ? "SELECT * FROM Projects WHERE createdBy = ?"
+    : "SELECT * FROM Projects";
+  const params = userId ? [userId] : [];
 
   db.all(query, params, (err, rows) => {
     if (err) {
@@ -315,7 +356,7 @@ app.post(
   }
 );
 
-// Get all project details under a specific doc-fund
+// Get all showcased project under a doc-fund
 app.get("/grants/ecosystem-doc-funds/projects/:docFundId", (req, res) => {
   const { docFundId } = req.params;
   const selectQuery = `
@@ -422,7 +463,7 @@ app.get("/grants/ecosystem-doc-funds/allocators/:docFundId", (req, res) => {
            AP.projectId AS allocatedProjectId, AP.amount AS allocationAmount,
            P.title AS projectTitle, P.createdBy AS projectCreatedBy
     FROM AllocatedProjects AP
-    INNER JOIN Users U ON AP.allocatedBy = U.userId
+    INNER JOIN Users U ON AP.allocatedBy = U.address
     INNER JOIN Projects P ON AP.projectId = P.projectId
     WHERE AP.docFundId = ${docFundId}
   `;
@@ -432,6 +473,8 @@ app.get("/grants/ecosystem-doc-funds/allocators/:docFundId", (req, res) => {
       res.status(500).json({ error: err.message });
       return;
     }
+
+    console.log(results)
 
     // Organize the results into the desired JSON structure
     const allocatorsMap = new Map(); // Map to group allocators and their allocations
@@ -472,6 +515,7 @@ app.get("/grants/ecosystem-doc-funds/allocators/:docFundId", (req, res) => {
 });
 
 // table helper
+
 app.post("/edit-table", (req, res) => {
   let query = `DROP TABLE table_name`;
 

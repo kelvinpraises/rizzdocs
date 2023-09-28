@@ -13,15 +13,15 @@ const Button = (button: buttonProps) => {
   return (
     <>
       {button.link ? (
-        <a
+        <Link
           className=" py-4 px-8 rounded-[5px] text-sm font-semibold bg-[#313B3D] text-white flex items-center"
-          href={button.href}
+          href={button.href || ""}
         >
           {button.text}
           {button.buttonImg && (
             <img src={`/${button.buttonImg}`} className=" pl-4" />
           )}
-        </a>
+        </Link>
       ) : (
         <button
           onClick={button.handleClick}

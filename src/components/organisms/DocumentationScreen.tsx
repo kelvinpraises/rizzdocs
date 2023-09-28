@@ -1,4 +1,4 @@
-import React from "react";
+import Link from "next/link";
 import TextHead from "../atoms/TextHead";
 import Card1 from "../molecules/Card1";
 
@@ -21,11 +21,16 @@ interface screenProps {
     href?: string;
   }[];
 }
-const MainScreen = (props: screenProps) => {
+
+const DocumentationScreen = (props: screenProps) => {
   return (
     <div className=" flex-1 bg-white rounded-[10px] p-8 overflow-y-scroll flex flex-col gap-8 shadow-[0px_4px_15px_5px_rgba(226,229,239,0.25)]">
       <TextHead title={props.title} subtitle={props.subtitle} tag={props.tag} />
-      {props.link?.length && <a href={props.linkhref} className=" font-semibold">{props.link}</a>}
+      {props.link?.length && (
+        <Link href={props.linkhref || ""} className=" font-semibold">
+          {props.link}
+        </Link>
+      )}
 
       <div className=" grid grid-cols-2 gap-8">
         {props.cardArray?.map((card, index) => (
@@ -46,4 +51,4 @@ const MainScreen = (props: screenProps) => {
   );
 };
 
-export default MainScreen;
+export default DocumentationScreen;

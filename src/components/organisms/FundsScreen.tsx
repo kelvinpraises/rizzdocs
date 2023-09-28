@@ -85,6 +85,8 @@ const ShowcaseSection = ({ id }: { id: any }) => {
       const docFundProjects = await getDocFundProjects(id);
       const personalProjects = await getProjects(userAddress);
 
+      console.log(docFundProjects)
+
       updateValues({ docFundProjects, personalProjects });
     })();
   }, []);
@@ -164,7 +166,7 @@ const AllocateSection = ({ id }: { id: any }) => {
       const allocators = await getAllocators(id);
       const docFundProjects: DocFundProjects[] = await getDocFundProjects(id);
 
-      console.log(allocators)
+      console.log(allocators);
 
       const personalAllocations = docFundProjects.map((docFund) => {
         return {

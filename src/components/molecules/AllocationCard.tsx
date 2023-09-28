@@ -1,9 +1,9 @@
 "use client";
 import { Allocation } from "@/hooks/backendAPI";
 import { produce } from "immer";
+import { useRouter } from "next/navigation";
 import { Dispatch, useState } from "react";
 import { AllocateSectionState } from "../organisms/FundsScreen";
-import { useRouter } from "next/navigation";
 
 interface cardProps {
   docFundId: string;
@@ -40,7 +40,8 @@ const AllocationCard = (card: cardProps) => {
         <div className=" w-[125px] p-4 rounded-[10px] bg-[#313B3D] grid place-items-center">
           <p className=" text-white">{0 /* totalToken */}</p>
         </div>
-        <button>
+
+        <button className={`${!card.readonly && "invisible"}`}>
           <img src="/down.svg" alt="" onClick={() => setShowMore(!showMore)} />
         </button>
       </div>

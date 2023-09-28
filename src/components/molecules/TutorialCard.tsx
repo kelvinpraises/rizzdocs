@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Emoji from "../atoms/Emoji";
+import Link from "next/link";
 
 interface ICardProp {
   emoji: string;
@@ -13,7 +14,7 @@ interface ICardProp {
 
 const TutorialCard = (card: ICardProp) => {
   return (
-    <a href={card.link}>
+    <Link href={card.link}>
       <div className=" flex flex-1 p-4 gap-4 items-center bg-[#F2F4F8] rounded-[10px] hover:bg-[#DEE6E5]">
         <div className="p-4 bg-white rounded-[10px]">
           <Emoji className=" w-14 text-5xl" emoji={card.emoji} />
@@ -34,7 +35,7 @@ const TutorialCard = (card: ICardProp) => {
           </div>
         </div>
       </div>
-    </a>
+    </Link>
   );
 };
 

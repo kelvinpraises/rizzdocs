@@ -1,5 +1,5 @@
 import GrantCarousel from "@/components/organisms/GrantCarousel";
-import MainScreen from "@/components/organisms/MainScreen";
+import DocumentationScreen from "@/components/organisms/DocumentationScreen";
 import React from "react";
 
 const page = () => {
@@ -15,7 +15,8 @@ const page = () => {
         typeIsLink: true,
         image: "rocket.svg",
         title: "Fund Ecosystem Projects",
-        text: "Create pooled funds to support LX Devs in your community.",
+        description:
+          "Create pooled funds to support LX Devs in your community.",
         buttonText: "Create New DocFund",
         buttonClick: "",
       },
@@ -24,7 +25,8 @@ const page = () => {
         typeIsLink: true,
         image: "timer.svg",
         title: "Receive Ecosystem Funding",
-        text: "Showcase a project to qualify for an ecosystem funding round.",
+        description:
+          "Showcase a project to qualify for an ecosystem funding round.",
         buttonText: "Showcase Project",
         buttonClick: "",
       },
@@ -33,7 +35,7 @@ const page = () => {
   return (
     <>
       <GrantCarousel />
-      <MainScreen {...data} />
+      <DocumentationScreen {...data} />
     </>
   );
 };
