@@ -14,7 +14,6 @@ const page = () => {
   useEffect(() => {
     (async () => {
       const docFunds: DocFundWithId[] = await getDocFunds("");
-      console.log(docFunds)
       const newDocFunds = docFunds.map((docFund) => {
         return {
           typeIsLink: true,

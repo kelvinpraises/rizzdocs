@@ -161,10 +161,10 @@ const AllocateSection = ({ id }: { id: any }) => {
   // TODO: take into consideration the previous allocations made by user, basicaly when user edits their prev choice
   useEffect(() => {
     (async () => {
-      const allocators = await getAllocators("1");
+      const allocators = await getAllocators(id);
       const docFundProjects: DocFundProjects[] = await getDocFundProjects(id);
 
-      console.log(allocators);
+      console.log(allocators)
 
       const personalAllocations = docFundProjects.map((docFund) => {
         return {

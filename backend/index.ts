@@ -138,7 +138,6 @@ app.post("/new-user", (req, res) => {
   db.run(insertQuery, [name, address, avatarUrl], function (err) {
     if (err) {
       res.status(500).json({ error: err.message });
-      console.error(err)
       return;
     }
 
