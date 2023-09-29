@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
-import "@tableland/evm/contracts/utils/TablelandDeployments.sol";
+import {TablelandDeployments} from "@tableland/evm/contracts/utils/TablelandDeployments.sol";
+import {ITablelandTables} from "@tableland/evm/contracts/interfaces/ITablelandTables.sol";
 
-import "./RizzDocsDoc.sol";
+import {RizzDocsDoc} from "./RizzDocsDoc.sol";
+import {IRizzDocsDoc} from "./IRizzDocsDoc.sol";
 
 contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
     using SafeERC20 for IERC20;
@@ -58,8 +60,10 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
     /// @notice Struct to hold details of the subscribing user
     struct User {
         address userAddr;
-        /// @dev 'channelAddress' to 'Subscription'
-        mapping(address => Subscription) subscriptions;
+        //  @dev 'channelAddress' to 'Subscription'
+        // mapping(address => Subscription) subscriptions;
+        /// @dev subscription here is different from above due to lighthouse limitation
+        Subscription daoSubscription;
     }
 
     /// @notice Struct to hold details of the user subscription
@@ -72,6 +76,12 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
     /// ========== Storage =============
     /// ================================
 
+    ITablelandTables internal immutable _tableland;
+
+    string[] names;
+    mapping(uint256 => string) private tableNames;
+    mapping(string => uint256) private tableIds;
+
     /// @notice The a space table id.
     uint256 public spaceTableId;
 
@@ -81,13 +91,16 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
     /// @notice The junction table id that links a document to it's spaces.
     uint256 public documentationSpaceTableId;
 
-    string private constant _TABLE_PREFIX = "my_quickstart_table";
+    string private constant _TABLE_PREFIX = "rizz";
 
     /// @notice The ERC20 token contract
     IERC20 public rizzDocsToken;
 
     /// @notice The total amount rewarded for a verified data upload
     uint256 public uploaderReward;
+
+    /// @notice The total amount rewarded for a verified data upload
+    uint256 public daoSubscriptionFee;
 
     /// @notice Mapping to check if a space exists
     mapping(bytes32 => bool) public spaceExists;
@@ -114,22 +127,36 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
         _;
     }
 
+    /// @notice Reverts UNAUTHORIZED if the caller is not the channel owner
+    /// @param _channelId The channel id
+    modifier onlyChannelMembers(bytes32 _channelId) {
+        if (!_isOwnerOrMemberOfChannel(_channelId, msg.sender)) {
+            revert("You're UNAUTHORIZED");
+        }
+        _;
+    }
+
     /// ===============================
     /// ======== Constructor ==========
     /// ===============================
 
-    constructor(address _rizzDocsToken, uint256 _uploaderReward) {
+    constructor(address _rizzDocsToken, uint256 _uploaderReward, uint256 _daoSubscriptionFee) {
+        _tableland = TablelandDeployments.get();
+
         rizzDocsToken = IERC20(_rizzDocsToken);
         uploaderReward = _uploaderReward;
-        // TODO: create space table and documentations
+        daoSubscriptionFee = _daoSubscriptionFee;
 
-        _tableId = TablelandDeployments.get().create(
-            address(this),
-            string.concat(
-                "CREATE TABLE _",
-                Strings.toString(block.chainid),
-                " (id integer primary key, message text);"
-            )
+        // Create a table for spaces
+        _createTable(
+            "Spaces",
+            "spaceId TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL"
+        );
+
+        // Create a table for Documentations
+        _createTable(
+            "Documentations",
+            "documentationId TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, documentationContract TEXT NOT NULL, spaceId TEXT NOT NULL"
         );
     }
 
@@ -142,7 +169,6 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
     event GrantDistributed(address indexed uploader, uint256 amount);
     event SubscriptionCreated(address indexed user, Channel channel);
     event SpaceCreated(bytes32 indexed spaceId, uint256 nonce, string name, string description);
-
     event DocumentationCreated(
         bytes32 indexed documentationId,
         uint256 nonce,
@@ -150,7 +176,6 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
         string description,
         address documentationContract
     );
-
     event ChannelCreated(
         bytes32 indexed channelId,
         uint256 nonce,
@@ -166,14 +191,25 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
     /// ===============================
 
     /// @notice Function to check if the user is subscribed to a channel
-    /// @param _userAddress Address of the user
+    /// @param _userAddress Address of the user®
     /// @param _channelId Address of the channel
     function isSubscribedToChannel(
         address _userAddress,
         address _channelId
     ) external view returns (bool) {
-        Subscription storage subInfo = allUsers[_userAddress].subscriptions[_channelId];
-        return subInfo.status && (subInfo.expiry >= block.timestamp);
+        // Subscription storage subInfo = allUsers[_userAddress].subscriptions[_channelId];
+        // return subInfo.status && (subInfo.expiry >= block.timestamp);
+    }
+
+    /// @notice Function to check if the user is subscribed receive gated content
+    /// @param _userAddress Address of the user
+    function isSubscribedToDAO(address _userAddress) external view returns (uint256) {
+        Subscription storage subInfo = allUsers[_userAddress].daoSubscription;
+        if (subInfo.status && (subInfo.expiry >= block.timestamp)) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     /// @notice Checks if the address is an owner or member of the channel
@@ -184,7 +220,7 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
         bytes32 _channelId,
         address _account
     ) external view returns (bool) {
-        return _isOwnerOfChannel(_channelId, _account) || _isMemberOfChannel(_channelId, _account);
+        return _isOwnerOrMemberOfChannel(_channelId, _account);
     }
 
     /// @notice Checks if the given address is an owner of the channel
@@ -203,13 +239,38 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
         return _isMemberOfChannel(_channelId, _member);
     }
 
+    // Note: custom just for exposing state
+    function getTables() public view returns (string[] memory) {
+        return names;
+    }
+
+    // Note: custom just for exposing state
+    function getTableId(string memory name) public view returns (uint256) {
+        return tableIds[name];
+    }
+
+    // Note: custom just for exposing state
+    function getName(uint256 tableId) public view returns (string memory) {
+        return tableNames[tableId];
+    }
+
+    // Note: custom just for exposing state
+    function getTableRegistryName(string memory name) public view returns (string memory) {
+        uint256 tableId = tableIds[name];
+        return _toNameFromId(tableId);
+    }
+
+    function getSelect(string memory name) public view returns (string memory) {
+        return string(abi.encodePacked("SELECT * FROM ", getTableRegistryName(name), ";"));
+    }
+
     /// ===============================
     /// ======= External/Custom =======
     /// ===============================
 
     /// @notice Execute a grant distribution to the specified recipients.
     /// @param _recipients An array of Recipient structures representing the recipients of the grant.
-    function executeGrant(Recipient[] _recipients) external onlyOwner {
+    function executeGrant(Recipient[] memory _recipients) external onlyOwner {
         _distribute(_recipients);
     }
 
@@ -218,11 +279,12 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
     /// @param _nonce Can be any integer, this is used to generate the 'spaceId' and should be unique for each space
     /// @param _name The name of the space
     /// @param _description The space description
-    function createSpace(uint256 _nonce, string _name, string _description) external onlyOwner {
+    function createSpace(uint256 _nonce, string memory _name, string memory _description) external {
         // Generate a space id using a nonce and the msg.sender
         bytes32 spaceId = _generateSpaceId(_nonce);
 
         require(!spaceExists[spaceId], "Nonce is already in use");
+        // TODO: spaceId passed in future is of type string please refactor
         spaceExists[spaceId] = true;
 
         Space memory space = Space({
@@ -232,7 +294,25 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
             description: _description
         });
 
-        // TODO: store space in TableLand
+        // "spaceId PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL"
+        _insertRows(
+            "Spaces",
+            string.concat(
+                "(",
+                "'",
+                Strings.toHexString(uint256(spaceId), 32),
+                "'",
+                ",",
+                "'",
+                _name,
+                "'",
+                ",",
+                "'",
+                _description,
+                "'",
+                ")"
+            )
+        );
 
         emit SpaceCreated(spaceId, space.nonce, space.name, space.description);
     }
@@ -242,27 +322,18 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
     /// @param _nonce Can be any integer, this is used to generate the 'documentationId' and should be unique for each documentation
     /// @param _name The name of the documentation
     /// @param _description The documentation description
-    /// @param _spaceIds The category by spaces which this documentation fits
+    /// @param _spaceId The category by spaces which this documentation fits
     function createDocumentation(
         uint256 _nonce,
-        string _name,
-        string _description,
-        bytes32[] _spaceIds
-    ) external onlyOwner {
+        string memory _name,
+        string memory _description,
+        bytes32 _spaceId
+    ) external {
         // Generate a documentation id using a nonce and the msg.sender
         bytes32 documentationId = _generateDocumentationId(_nonce);
 
         // Check that spaces are valid
-        uint256 spacesLength = _spaceIds.length;
-        for (uint256 i = 0; i < spacesLength; ) {
-            address spaceId = _spaceIds[i];
-
-            require(spaceExists[spaceId], "Invalid space id");
-
-            unchecked {
-                i++;
-            }
-        }
+        require(spaceExists[_spaceId], "Invalid space id");
 
         require(!documentationExists[documentationId], "Nonce is already in use");
         documentationExists[documentationId] = true;
@@ -272,11 +343,37 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
             nonce: _nonce,
             name: _name,
             description: _description,
-            officialChannelId: address(0),
-            documentationContract: _deployDocumentationContract(documentationId, _name, _spaceIds)
+            officialChannelId: "",
+            documentationContract: _deployDocumentationContract()
         });
 
-        // TODO: store documentation in TableLand
+        // "documentationId PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, documentationContract TEXT NOT NULL"
+        _insertRows(
+            "Documentations",
+            string.concat(
+                "(",
+                "'",
+                Strings.toHexString(uint256(documentationId), 32),
+                "'",
+                ",",
+                "'",
+                _name,
+                "'",
+                ",",
+                "'",
+                _description,
+                "'",
+                ",",
+                "'",
+                Strings.toHexString(uint160(documentation.documentationContract), 20),
+                "'",
+                ",",
+                "'",
+                Strings.toHexString(uint256(_spaceId), 32),
+                "'",
+                ")"
+            )
+        );
 
         emit DocumentationCreated(
             documentationId,
@@ -298,8 +395,8 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
     /// @param _members The members of the channel
     function createChannel(
         uint256 _nonce,
-        string _name,
-        string _description,
+        string memory _name,
+        string memory _description,
         address _owner,
         address _feeAddress,
         uint256 _subscriptionFee,
@@ -308,7 +405,7 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
         // Generate a channel id using a nonce and the msg.sender
         bytes32 channelId = _generateChannelId(_nonce);
 
-        require(allChannels[channelId].channelAddress == address(0), "Nonce is already in use");
+        require(allChannels[channelId].feeAddress == address(0), "Nonce is already in use");
 
         Channel memory channel = Channel({
             id: channelId,
@@ -393,21 +490,43 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
     /// @notice Function to subscribe to a channel
     /// @param _channelId The 'channelId' of the channel
     function subscribeToChannel(bytes32 _channelId) external {
-        Channel storage channel = allChannels[_channelId];
-        require(channel.channelAddress != address(0), "Channel doesn't exist");
+        // Channel storage channel = allChannels[_channelId];
+        // require(channel.feeAddress != address(0), "Channel doesn't exist");
+        // User storage user = allUsers[msg.sender];
+        // Subscription storage subInfo = user.subscriptions[_channelId];
+        // require(!subInfo.status, "Already subscribed to this channel");
+        // require(
+        //     rizzDocsToken.allowance(msg.sender, address(this)) >= channel.subscriptionFee,
+        //     "You must approve the contract to spend tokens first"
+        // );
+        // require(
+        //     rizzDocsToken.transferFrom(msg.sender, channel.feeAddress, channel.subscriptionFee),
+        //     "Token transfer failed"
+        // );
+        // subInfo.status = true;
+        // subInfo.expiry = block.timestamp + 30 days;
+    }
 
+    /// @notice Function to subscribe to DAO gated docs
+    function subscribeToDAO() external {
         User storage user = allUsers[msg.sender];
-        Subscription storage subInfo = user.subscriptions[_channelId];
+        Subscription storage subInfo = user.daoSubscription;
 
-        require(!subInfo.status, "Already subscribed to this channel");
+        // Check if the user already exists, and if not, create a new user
+        if (user.userAddr == address(0)) {
+            user.userAddr = msg.sender;
+        }
+
+        // Check if the user is already subscribed
+        require(!subInfo.status, "Already subscribed");
 
         require(
-            rizzDocsToken.allowance(msg.sender, address(this)) >= channel.subscriptionFee,
-            "You must approve the contract to spend tokens first"
+            rizzDocsToken.allowance(msg.sender, address(this)) >= daoSubscriptionFee,
+            "Approve token spend"
         );
 
         require(
-            rizzDocsToken.transferFrom(msg.sender, channel.feeAddress, channel.subscriptionFee),
+            rizzDocsToken.transferFrom(msg.sender, address(this), daoSubscriptionFee),
             "Token transfer failed"
         );
 
@@ -415,16 +534,54 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
         subInfo.expiry = block.timestamp + 30 days;
     }
 
+    /// @notice Function to subscribe to DAO gated docs
+    function subscribeToDAOy() external {
+        User storage user = allUsers[msg.sender];
+        require(user.userAddr == address(0), "User already exists");
+
+        // Check allowance and transfer tokens in a single require statement
+        require(
+            rizzDocsToken.transferFrom(msg.sender, address(this), daoSubscriptionFee),
+            "Token transfer"
+        );
+
+        // Update user and subscription info
+        user.userAddr = msg.sender;
+        user.daoSubscription.status = true;
+        user.daoSubscription.expiry = block.timestamp + 30 days;
+    }
+
+    function addContent(
+        bytes32 _channelId,
+        address _documentationContractAddress,
+        IRizzDocsDoc.DocType _doctype,
+        string memory _values
+    ) public onlyChannelMembers(_channelId) {
+        IRizzDocsDoc documentationContract = IRizzDocsDoc(_documentationContractAddress);
+
+        //TODO: make tables owned by channels to prevent exploits
+        documentationContract.addContent(_doctype, _values);
+    }
+
+    function removeContent(
+        bytes32 _channelId,
+        address _documentationContractAddress,
+        IRizzDocsDoc.DocType _doctype,
+        string memory _filter
+    ) public onlyChannelMembers(_channelId) {
+        IRizzDocsDoc documentationContract = IRizzDocsDoc(_documentationContractAddress);
+
+        //TODO: make tables owned by channels to prevent exploits
+        documentationContract.removeContent(_doctype, _filter);
+    }
+
     function uploadFile(bytes32 _fileCID) external {
         //TODO:
-        require(!fileExists(_fileCID), "File already exists");
-        require(verifyPoDSI(_fileCID), "File does not contain the correct data");
-
-        saveFile(_fileCID);
-
-        _transferAmount(msg.sender, uploaderReward);
-
-        emit RewardDistributed(msg.sender, uploaderReward);
+        // require(!fileExists(_fileCID), "File already exists");
+        // require(verifyPoDSI(_fileCID), "File does not contain the correct data");
+        // saveFile(_fileCID);
+        // _transferAmount(msg.sender, uploaderReward);
+        // emit RewardDistributed(msg.sender, uploaderReward);
     }
 
     /// @notice Set a new reward value for an uploader.
@@ -438,7 +595,8 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
     /// @param _amount The amount of Ether to withdraw.
     /// @param _admin The address of the admin who will receive the Ether.
     function ethWithdraw(uint256 _amount, address _admin) external onlyOwner {
-        require(payable(_admin).transfer(_amount), "Transfer failed or insufficient balance");
+        // TODO: implement
+        // require(payable(_admin).transfer(_amount), "Transfer failed or insufficient balance");
     }
 
     /// @notice Allow the admin to withdraw ERC-20 tokens
@@ -525,18 +683,74 @@ contract RizzDocsClient is Ownable, AccessControl, ERC721Holder {
         return hasRole(_channelId, _member);
     }
 
+    /// @notice Checks if the address is an owner or member of the channel
+    /// @param _channelId The 'channelId' of the channel
+    /// @param _account The address to check
+    /// @return 'true' if the address is an owner or member of the channel, otherwise 'false'
+    function _isOwnerOrMemberOfChannel(
+        bytes32 _channelId,
+        address _account
+    ) internal view returns (bool) {
+        return _isOwnerOfChannel(_channelId, _account) || _isMemberOfChannel(_channelId, _account);
+    }
+
     /// @notice Deploys the documentation contract
-    /// @param _documentationId The documentation id
-    /// @param _name The name of the documentation
-    /// @param _spaceIds The category by spaces which this documentation fits
-    /// @return The address of the deployed documentation contract
-    function _deployDocumentationContract(
-        bytes32 _documentationId,
-        string memory _name,
-        bytes32[] _spaceIds
-    ) internal returns (address) {
-        address contractAddress = new RizzDocsDoc(_documentationId, _name, _spaceIds);
+    function _deployDocumentationContract() internal returns (address) {
+        RizzDocsDoc contractInstance = new RizzDocsDoc();
+        address contractAddress = address(contractInstance);
         return contractAddress;
+    }
+
+    /// @notice Creates a new table with the specified name and schema.
+    /// @param _name The name of the new table.
+    /// @param _schema The schema of the new table.
+    function _createTable(string memory _name, string memory _schema) internal {
+        // Generate the CREATE TABLE statement based on the given schema and chain ID.
+        string memory statement = string.concat(
+            "CREATE TABLE _",
+            Strings.toString(block.chainid),
+            " (",
+            _schema,
+            ")"
+        );
+
+        uint256 tableId = _tableland.create(address(this), statement);
+
+        tableIds[_name] = tableId;
+        tableNames[tableId] = _name;
+        names.push(_name);
+    }
+
+    /// @notice Inserts rows into a table with the specified name, using specified columns and values.
+    /// @param _name The name of the table to insert rows into.
+    /// @param _values The values to insert into the specified columns.
+    function _insertRows(string memory _name, string memory _values) internal {
+        uint256 tableId = tableIds[_name];
+        string memory tableName = _toNameFromId(tableId);
+
+        _tableland.mutate(
+            address(this),
+            tableId,
+            string.concat("INSERT INTO ", tableName, " VALUES", _values)
+        );
+    }
+
+    /// @notice Deletes rows from a table with the specified name using a filter condition.
+    /// @param _name The name of the table to delete rows from.
+    /// @param _filter The filter condition to determine which rows to delete.
+    function _deleteRows(string memory _name, string memory _filter) internal {
+        uint256 tableId = tableIds[_name];
+        string memory tableName = _toNameFromId(tableId);
+
+        _tableland.mutate(
+            address(this),
+            tableId,
+            string(abi.encodePacked("DELETE FROM ", tableName, " WHERE ", _filter))
+        );
+    }
+
+    function _toNameFromId(uint256 tableId) internal view returns (string memory) {
+        return string.concat("_", Strings.toString(block.chainid), "_", Strings.toString(tableId));
     }
 
     /// @notice This contract should be able to receive native token

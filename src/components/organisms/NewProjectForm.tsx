@@ -49,7 +49,7 @@ const NewProjectForm = () => {
     <div className=" flex-1 bg-white rounded-[10px] p-8 overflow-y-scroll flex flex-col gap-8 items-start">
       <TextHead
         title="Showcase Project"
-        subtitle="Showcase a project to qualify for an ecosystem funding round."
+        description="Showcase a project to qualify for an ecosystem funding round."
       />
       <div className=" w-[480px] flex flex-col gap-8">
         <div className=" flex flex-col gap-2 w-full">

@@ -58,7 +58,7 @@ const CreateNewDocFund = () => {
     <div className=" flex-1 bg-white rounded-[10px] p-8 overflow-y-scroll flex flex-col gap-8 items-start">
       <TextHead
         title="Create New DocFund"
-        subtitle="Create pooled funds to support LX Devs in your community."
+        description="Create pooled funds to support LX Devs in your community."
       />
       <div className=" w-[480px] flex flex-col gap-8">
         <div className=" flex flex-col gap-2 w-full">

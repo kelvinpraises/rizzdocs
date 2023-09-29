@@ -16,7 +16,7 @@ const page = () => {
             title: "Adding deals to filecoin using light house deals",
             datePosted: 5,
             authorPfp: "/author.svg",
-            link: "/editor",
+            link: "/space/id/guides/1/editor",
           },
         ]}
       />

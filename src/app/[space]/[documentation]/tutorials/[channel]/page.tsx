@@ -1,7 +1,4 @@
 import ChannelScreen from "@/components/organisms/ChannelScreen";
-import MainScreen from "@/components/organisms/MainScreen";
-import SpaceCarousel from "@/components/organisms/SpaceCarousel";
-import React from "react";
 
 const page = () => {
   return (
@@ -16,7 +13,7 @@ const page = () => {
             title: "Adding deals to filecoin using light house deals",
             datePosted: 5,
             authorPfp: "/author.svg",
-            link: "/editor",
+            link: "/space/id/tutorials/1/editor",
           },
         ]}
       />

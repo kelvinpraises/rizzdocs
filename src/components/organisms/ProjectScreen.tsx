@@ -31,7 +31,7 @@ const ProjectScreen = () => {
     <div className=" flex-1 bg-white rounded-[10px] p-8 overflow-y-scroll flex flex-col gap-8 shadow-[0px_4px_15px_5px_rgba(226,229,239,0.25)]">
       <TextHead
         title={data?.title}
-        subtitle={data?.description}
+        description={data?.description}
         tag={"DocFund Project"}
       />
       <div className=" flex flex-col gap-8">

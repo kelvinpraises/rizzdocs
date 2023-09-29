@@ -19,6 +19,7 @@
     "@editorjs/paragraph": "^2.10.0",
     "@editorjs/simple-image": "^1.5.1",
     "@huddle01/react": "^0.0.9",
+    "@lighthouse-web3/sdk": "^0.2.8",
     "@radix-ui/react-popover": "^1.0.7",
     "@radix-ui/react-toggle": "^1.0.3",
     "@swc-node/register": "^1.6.7",

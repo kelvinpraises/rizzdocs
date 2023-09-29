@@ -2,7 +2,7 @@ import React from "react";
 
 interface IHead {
   title?: string;
-  subtitle?: string;
+  description?: string;
   tag?: string;
 }
 
@@ -13,7 +13,7 @@ const TextHead = (prop: IHead) => {
         <p className=" text-[40px] font-semibold">{prop.title}</p>
         <p className=" text-sm font-semibold">{prop.tag}</p>
       </div>
-      <p>{prop.subtitle}</p>
+      <p>{prop.description}</p>
     </div>
   );
 };

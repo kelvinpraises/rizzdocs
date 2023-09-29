@@ -17,19 +17,5 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <LayoutWrapper>
-      <html lang="en">
-        <body className={inter.className}>
-          <main className=" flex flex-col gap-8 w-screen h-screen">
-            <Header />
-            <div className=" flex flex-1 overflow-y-scroll px-8 gap-8">
-              {children}
-            </div>
-            <Footer />
-          </main>
-        </body>
-      </html>
-    </LayoutWrapper>
-  );
+  return <LayoutWrapper>{children}</LayoutWrapper>;
 }
