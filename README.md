@@ -1,4 +1,3 @@
-
 # RizzDocs Project Readme
 
 ## Project Overview
@@ -9,7 +8,7 @@ RizzDocs is a project designed to centralize learning resources for developers a
 
 To see RizzDocs in action, check out our demo video:
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/_yfi0iinQCE" frameborder="0" allowfullscreen></iframe>
+[![Video](https://img.youtube.com/vi/_yfi0iinQCE/maxresdefault.jpg)](https://www.youtube.com/watch?v=_yfi0iinQCE)
 
 This video provides a visual demonstration of how the project works.
 
@@ -50,4 +49,3 @@ These contracts play a vital role in the functionality of RizzDocs.
 The hexadecimal addresses listed above correspond to relevant Solidity contracts on the Filecoin Test Net FVM. Ensure that you use the appropriate addresses and contracts when interacting with the project.
 
 Feel free to explore and contribute to this exciting initiative that aims to make learning resources accessible and centralized for developers and projects. For any questions or clarifications, please dm me on twitter @kelvinpraises
-
